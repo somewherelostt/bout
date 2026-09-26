@@ -21,6 +21,20 @@ npm run dev -- doctor
 npm run check
 ```
 
+## Create a local review battle
+
+Prepare a Markdown task and two patch files, then run:
+
+```bash
+npm run dev -- battle create \
+  --task ./task.md \
+  --candidate-one ./candidate-one.patch \
+  --candidate-two ./candidate-two.patch \
+  --verify "npm test"
+```
+
+The command creates `.review-harness/battles/<id>/review`, which contains only anonymous reviewer material. The source-to-label mapping is kept under the battle's separate `private` directory.
+
 ## Principles
 
 - The same task and verification command apply to both candidates.

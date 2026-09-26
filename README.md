@@ -12,7 +12,7 @@ Turn two candidate patches into one evidence-backed human verdict—without reve
 
 Bout is a terminal-first evaluation workflow for code changes. It packages two patches against the same task, randomizes their reviewer-facing identities, records tamper-evident hashes, and prepares a paid review bounty with a strict response contract.
 
-No dashboard is required. Every task, patch, decision, and receipt remains inspectable as a local file.
+No dashboard is required. Every task, patch, decision, and receipt remains inspectable as a local file. An optional local web workspace is included for demonstrating the same workflow visually; the CLI remains the core product and Gibwork integration.
 
 ## Why Bout
 
@@ -46,6 +46,7 @@ The same task and verification command apply to both candidates. Original source
 | Private identity mapping | Ready |
 | Offline bounty preview | Ready |
 | Guarded stage publishing | Ready |
+| Responsive local web workspace | Ready |
 | Submission retrieval and verdict aggregation | Next |
 | Final Markdown and JSON reports | Next |
 
@@ -71,6 +72,17 @@ Expected result:
 PASS  Node.js  v22+
 PASS  Git      git version ...
 ```
+
+### Open the visual workspace
+
+Install the web package once, then start the local interface:
+
+```bash
+npm install --prefix web
+npm run dev:web
+```
+
+Open `http://localhost:4173`. The workspace includes the bout composer, history, judge queue, vault, benchmarks, awards, and blind comparison flow. Demo state stays in the browser; it does not publish a bounty or spend funds.
 
 ## Run a blind battle
 
@@ -200,10 +212,11 @@ Run `bout <command> --help` for complete options.
 
 ```bash
 npm install
+npm install --prefix web
 npm run check
 ```
 
-`npm run check` compiles the TypeScript project and runs the complete test suite. Remote verification also rejects high- or critical-severity dependency advisories.
+`npm run check` compiles the CLI, runs the complete test suite, and produces a production web build. Remote verification also rejects high- or critical-severity dependency advisories.
 
 ## Documentation
 

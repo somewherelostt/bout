@@ -9,8 +9,10 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "check": "npm run build && npm run test",
+    "build:web": "npm --prefix web run build",
+    "check": "npm run build && npm run test && npm run build:web",
     "dev": "tsx src/cli.ts",
+    "dev:web": "npm --prefix web run dev",
     "start": "node dist/cli.js",
     "test": "vitest run",
     "test:watch": "vitest"

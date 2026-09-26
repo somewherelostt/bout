@@ -27,8 +27,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install web dependencies
+        run: npm ci --prefix web
+
       - name: Build and test
         run: npm run check
 
       - name: Reject high-severity dependency advisories
-        run: npm audit --audit-level=high
+        run: |
+          npm audit --audit-level=high
+          npm audit --prefix web --audit-level=high

@@ -1,0 +1,10 @@
+node_modules/
+dist/
+coverage/
+.env
+.env.*
+!.env.example
+.review-harness/
+*.log
+.DS_Store
+Thumbs.db

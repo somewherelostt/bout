@@ -8,7 +8,7 @@ Wallet keys are read only from an explicit local file during the publish command
 
 Everything under a battle's `review` directory should be treated as publishable. Do not place proprietary code, credentials, personal information, internal hostnames, or secret-bearing logs in task or candidate files.
 
-The `private` directory contains the source identity mapping and publication receipt. It is local state and must not be distributed to reviewers.
+The `private` directory contains the source identity mapping, publication receipt, synchronized review responses, and final reports. It is creator-only local state and must not be distributed to reviewers without deliberate redaction.
 
 ## Dependency advisories
 

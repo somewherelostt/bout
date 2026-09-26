@@ -1,0 +1,29 @@
+diff --git a/src/resolve-path.ts b/src/resolve-path.ts
+index 7f1729a..13aa401 100644
+--- a/src/resolve-path.ts
++++ b/src/resolve-path.ts
+@@ -1,5 +1,11 @@
+ import path from "node:path";
+ 
+ export function resolveWorkspacePath(workspace: string, requested: string): string {
+-  return path.resolve(workspace, requested);
++  const root = path.resolve(workspace);
++  const resolved = path.resolve(root, requested);
++  const relative = path.relative(root, resolved);
++  if (path.isAbsolute(requested) || relative.startsWith("..") || path.isAbsolute(relative)) {
++    throw new Error("Path escapes the configured workspace.");
++  }
++  return resolved;
+ }
+diff --git a/test/resolve-path.test.ts b/test/resolve-path.test.ts
+index 9a1180f..2d20f9e 100644
+--- a/test/resolve-path.test.ts
++++ b/test/resolve-path.test.ts
+@@ -8,4 +8,8 @@ describe("resolveWorkspacePath", () => {
+     expect(resolveWorkspacePath("/work", "src/index.ts")).toBe("/work/src/index.ts");
+   });
++
++  it("rejects traversal", () => {
++    expect(() => resolveWorkspacePath("/work", "../secret")).toThrow("escapes");
++  });
+ });

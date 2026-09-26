@@ -1,0 +1,26 @@
+diff --git a/src/resolve-path.ts b/src/resolve-path.ts
+index 7f1729a..43fca82 100644
+--- a/src/resolve-path.ts
++++ b/src/resolve-path.ts
+@@ -1,5 +1,10 @@
+ import path from "node:path";
+ 
+ export function resolveWorkspacePath(workspace: string, requested: string): string {
+-  return path.resolve(workspace, requested);
++  if (requested.includes("..")) {
++    throw new Error("Traversal is not allowed.");
++  }
++  return path.join(workspace, requested);
+ }
+diff --git a/test/resolve-path.test.ts b/test/resolve-path.test.ts
+index 9a1180f..c263ae1 100644
+--- a/test/resolve-path.test.ts
++++ b/test/resolve-path.test.ts
+@@ -8,4 +8,8 @@ describe("resolveWorkspacePath", () => {
+     expect(resolveWorkspacePath("/work", "src/index.ts")).toBe("/work/src/index.ts");
+   });
++
++  it("rejects dot-dot input", () => {
++    expect(() => resolveWorkspacePath("/work", "../secret")).toThrow("Traversal");
++  });
+ });

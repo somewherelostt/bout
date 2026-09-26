@@ -46,12 +46,15 @@ The same task and verification command apply to both candidates. Original source
 | Private identity mapping | Ready |
 | Offline bounty preview | Ready |
 | Guarded stage publishing | Ready |
+| Creator-owned submission synchronization | Ready |
+| Structured review parsing and validation | Ready |
+| Deterministic multi-review consensus | Ready |
+| Private winner resolution | Ready |
+| Final Markdown and JSON reports | Ready |
 | Responsive local web workspace | Ready |
 | Structured four-way verdict capture | Ready |
 | Transactional SQLite workspace index | Ready |
 | Automatic legacy artifact migration | Ready |
-| Submission retrieval and verdict aggregation | Next |
-| Final Markdown and JSON reports | Next |
 
 ## Quick start
 
@@ -92,6 +95,8 @@ The composer creates a real anonymized battle bundle and prepares its Gibwork bo
 
 The review screen stores the complete reviewer contract—four-way outcome, confidence, correctness, security, maintainability, concrete evidence, and rationale—in `review/verdict.json`. Evidence metrics are computed from readable local artifacts and report their denominator and limits instead of inventing empty-state results.
 
+Creator-authenticated submission synchronization and final report generation remain CLI-only so wallet material never enters the browser.
+
 ## Run a blind battle
 
 Prepare three files:
@@ -101,6 +106,8 @@ task.md
 candidate-one.patch
 candidate-two.patch
 ```
+
+A complete, sanitized input set is available under [`examples/path-validation`](examples/path-validation).
 
 `task.md` should define the problem, constraints, acceptance criteria, and the expected verification command. Candidate files should be standard Git patches without author or model identifiers.
 
@@ -135,7 +142,8 @@ Only the `review` directory belongs in reviewer-facing material. The `private` d
 
 Bout uses hybrid local persistence:
 
-- SQLite stores battles, candidate metadata, bounty drafts, publication receipts, verdicts, artifact hashes, and an append-only workflow event index.
+- SQLite stores battles, candidate metadata, bounty drafts, publication receipts, submission-sync summaries, verdicts, report summaries, artifact hashes, and an append-only workflow event index.
+- Review bodies and source identities remain ordinary creator-only files; they are not copied into SQLite.
 - Original task documents, patches, manifests, verdict exports, and private receipts remain ordinary files under `.bout/battles`.
 - The SQLite index stores artifact paths, byte sizes, and SHA-256 hashes—not patch bodies.
 - Existing file-only workspaces are imported idempotently when the local API starts.
@@ -176,6 +184,41 @@ bout bounty publish <battle-id> \
 ```
 
 Bout refuses to publish unless the confirmation phrase matches exactly. Wallet material is read from the supplied file, used locally for signing, and never written into battle state or command output.
+
+## Synchronize reviews and generate the result
+
+After reviewers submit their structured decisions to the published Gibwork bounty, retrieve every creator-visible submission:
+
+```bash
+bout bounty sync <battle-id> \
+  --keypair /absolute/path/to/keypair.json
+```
+
+Bout stores a sanitized, creator-only synchronization record under `private/submissions.json`. It does not persist reviewer profile data. Each non-rejected response is parsed against the required verdict contract; malformed responses remain visible with a validation error and are excluded from consensus.
+
+Generate the final creator report:
+
+```bash
+bout report generate <battle-id>
+```
+
+Expected output shape:
+
+```text
+OUTCOME    A
+REVIEWS    2 valid
+WINNER     source-1
+MARKDOWN   .../private/report.md
+JSON       .../private/report.json
+```
+
+Consensus uses one vote per valid, non-rejected structured review. A unique highest vote wins; a tied highest count becomes `NO_CONSENSUS`. Confidence is reported as an arithmetic mean and never used to silently break a vote tie. Candidate resolution uses the private identity map only after aggregation.
+
+Inspect local workflow states at any time:
+
+```bash
+bout battle list
+```
 
 ## Reviewer contract
 
@@ -223,8 +266,11 @@ Do not place proprietary code, credentials, personal information, internal hostn
 ```text
 bout doctor
 bout battle create [options]
+bout battle list [options]
 bout bounty prepare <battle-id> [options]
 bout bounty publish <battle-id> [options]
+bout bounty sync <battle-id> [options]
+bout report generate <battle-id> [options]
 ```
 
 Run `bout <command> --help` for complete options.
@@ -242,6 +288,8 @@ npm run check
 ## Documentation
 
 - [Architecture and trust boundaries](docs/architecture.md)
+- [Five-minute demo runbook](docs/demo-script.md)
+- [Hackathon submission checklist](docs/submission-checklist.md)
 - [Security policy](SECURITY.md)
 
 ## License

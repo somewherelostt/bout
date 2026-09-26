@@ -13,6 +13,8 @@
 <p align="center">
   <a href="https://bout-omega.vercel.app"><strong>Open the showcase</strong></a>
   &nbsp;·&nbsp;
+  <a href="https://maaztwts.notion.site/Bout-Paid-Blind-Code-Review-3e732902e4a38129804adae0dbbb4820"><strong>Read the project brief</strong></a>
+  &nbsp;·&nbsp;
   <a href="#quick-start"><strong>Run the CLI</strong></a>
   &nbsp;·&nbsp;
   <a href="docs/architecture.md"><strong>Read the architecture</strong></a>

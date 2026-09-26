@@ -17,6 +17,7 @@
 
 - [x] Add an original cover image and a current visual-workbench screenshot.
 - [x] Prepare a paste-ready Gibwork submission draft with clearly marked evidence placeholders.
+- [x] Publish and verify the public Notion project brief.
 - [ ] Add the real Gibwork task URL or task ID to the README demo section.
 - [ ] Add redacted terminal screenshots for creation, publication, synchronization, and report generation.
 - [ ] Add a public demo video URL.

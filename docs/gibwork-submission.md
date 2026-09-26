@@ -52,7 +52,7 @@ The integration is intentionally guarded. Draft generation is offline. Publishin
 
 - **Source:** https://github.com/somewherelostt/bout
 - **Read-only visual showcase:** https://bout-omega.vercel.app
-- **Project brief:** ADD BEFORE SUBMITTING — paste the public Notion URL
+- **Project brief:** https://maaztwts.notion.site/Bout-Paid-Blind-Code-Review-3e732902e4a38129804adae0dbbb4820
 - **Demo video:** ADD BEFORE SUBMITTING — paste the public recording URL
 - **Published Gibwork task:** ADD BEFORE SUBMITTING — paste the task URL or ID
 

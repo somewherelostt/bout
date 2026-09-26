@@ -17,7 +17,7 @@ This runbook keeps the final demonstration terminal-first and within five minute
 3. Create a battle from the files in `examples/path-validation`.
 4. Show the anonymous `candidate-a.patch`, `candidate-b.patch`, and manifest hashes.
 5. Run `bout bounty prepare` and inspect the generated public payload.
-6. Show the already published Gibwork task and its task ID. If publishing during the recording, use `--max-total` and confirm the prepared SDK quote does not exceed that ceiling.
+6. Show the already published Gibwork task and its task ID. Run `bout bounty publish-status <battle-id>` to show the confirmed local receipt. If publishing during the recording, use `--max-total` and confirm the prepared SDK quote does not exceed that ceiling.
 7. Run `bout bounty sync` with the creator wallet path kept outside the camera crop or supplied through a shell variable.
 8. Run `bout report generate`.
 9. Open `private/report.md` and point out the tally, evidence, consensus, and privately resolved source slot.

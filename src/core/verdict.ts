@@ -1,6 +1,11 @@
 import path from "node:path";
 import { writeJson } from "./json.js";
-import { verdictRecordSchema, type VerdictInput, type VerdictRecord } from "./schemas.js";
+import {
+  battleIdSchema,
+  verdictRecordSchema,
+  type VerdictInput,
+  type VerdictRecord,
+} from "./schemas.js";
 import { syncBattleToDatabase } from "../db/store.js";
 
 export async function saveVerdict(input: {
@@ -9,6 +14,7 @@ export async function saveVerdict(input: {
   verdict: VerdictInput;
   now?: () => Date;
 }): Promise<VerdictRecord> {
+  const battleId = battleIdSchema.parse(input.battleId);
   const record = verdictRecordSchema.parse({
     ...input.verdict,
     schemaVersion: 1,
@@ -18,11 +24,11 @@ export async function saveVerdict(input: {
     input.workspace,
     ".bout",
     "battles",
-    input.battleId,
+    battleId,
     "review",
     "verdict.json",
   );
   await writeJson(verdictPath, record);
-  await syncBattleToDatabase(input.workspace, input.battleId);
+  await syncBattleToDatabase(input.workspace, battleId);
   return record;
 }

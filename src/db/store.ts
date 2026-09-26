@@ -5,7 +5,12 @@ import { desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import type { ZodType } from "zod";
 import { sha256 } from "../core/hash.js";
-import { reviewManifestSchema, verdictRecordSchema, type VerdictRecord } from "../core/schemas.js";
+import {
+  battleIdSchema,
+  reviewManifestSchema,
+  verdictRecordSchema,
+  type VerdictRecord,
+} from "../core/schemas.js";
 import {
   bountyDraftSchema,
   decimalToMicros,
@@ -51,6 +56,8 @@ export interface IndexedBattle {
   publicationTaskId: string | null;
   hasBountyDraft: boolean;
   hasPublicationReceipt: boolean;
+  hasSubmissionSync: boolean;
+  submissionsSyncedAt: string | null;
   submissionCount: number;
   validReviewCount: number;
   report: IndexedReport | null;
@@ -94,8 +101,9 @@ export function getBoutArtifactRoot(workspace: string): string {
   return path.resolve(workspace, ".bout", "battles");
 }
 
-export async function syncBattleToDatabase(workspace: string, battleId: string): Promise<void> {
-  const battleDirectory = path.resolve(workspace, ".bout", "battles", battleId);
+export async function syncBattleToDatabase(workspace: string, battleIdInput: string): Promise<void> {
+  const validatedBattleId = battleIdSchema.parse(battleIdInput);
+  const battleDirectory = path.resolve(workspace, ".bout", "battles", validatedBattleId);
   const reviewDirectory = path.join(battleDirectory, "review");
   const [
     manifest,
@@ -129,18 +137,26 @@ export async function syncBattleToDatabase(workspace: string, battleId: string):
       ),
     ]);
 
-  if (manifest.battleId !== battleId) {
-    throw new Error(`Battle directory ${battleId} does not match manifest ${manifest.battleId}.`);
+  if (manifest.battleId !== validatedBattleId) {
+    throw new Error(
+      `Battle directory ${validatedBattleId} does not match manifest ${manifest.battleId}.`,
+    );
   }
   if (submissionSync && publication?.taskId !== submissionSync.taskId) {
     throw new Error("Synced submissions do not match the published Gibwork task.");
   }
-  if (report && (report.taskId !== submissionSync?.taskId || report.battleId !== battleId)) {
+  if (
+    report &&
+    (report.taskId !== submissionSync?.taskId ||
+      report.battleId !== validatedBattleId ||
+      report.submissionsSyncedAt !== submissionSync?.syncedAt)
+  ) {
     throw new Error("The final report does not match this battle and submission sync.");
   }
 
   const task = taskBuffer.toString("utf8");
   const updatedAt = new Date().toISOString();
+  const battleId = validatedBattleId;
   const artifactDefinitions = createArtifactDefinitions(battleId);
   const indexedArtifacts = (
     await Promise.all(
@@ -557,6 +573,8 @@ export async function listIndexedBattles(workspace: string): Promise<IndexedBatt
         publicationTaskId: publication?.taskId ?? null,
         hasBountyDraft: draft !== undefined,
         hasPublicationReceipt: publication !== undefined,
+        hasSubmissionSync: submissionSync !== undefined,
+        submissionsSyncedAt: submissionSync?.syncedAt ?? null,
         submissionCount: submissionSync?.submissionCount ?? 0,
         validReviewCount: submissionSync?.validReviewCount ?? 0,
         report: report

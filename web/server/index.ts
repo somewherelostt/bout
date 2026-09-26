@@ -142,7 +142,7 @@ async function loadWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
     prepared: battleRecords.filter((battle) => battle.hasBountyDraft).length,
     published: battleRecords.filter((battle) => battle.hasPublicationReceipt).length,
     reviewed: battleRecords.filter((battle) => battle.verdict !== null).length,
-    synced: battleRecords.filter((battle) => battle.submissionCount > 0).length,
+    synced: battleRecords.filter((battle) => battle.hasSubmissionSync).length,
     reported: battleRecords.filter((battle) => battle.report !== null).length,
     totalPool: battleRecords.reduce((sum, battle) => sum + battle.reward, 0),
   };
@@ -179,6 +179,8 @@ async function loadBattle(indexed: IndexedBattle): Promise<BoutRecord | null> {
 
     const status: BoutRecord["status"] = indexed.report || indexed.verdict
       ? "Complete"
+      : indexed.hasSubmissionSync
+        ? "Synced"
       : indexed.hasPublicationReceipt
         ? "Published"
         : indexed.hasBountyDraft
@@ -202,6 +204,8 @@ async function loadBattle(indexed: IndexedBattle): Promise<BoutRecord | null> {
       publicationTaskId: indexed.publicationTaskId,
       hasBountyDraft: indexed.hasBountyDraft,
       hasPublicationReceipt: indexed.hasPublicationReceipt,
+      hasSubmissionSync: indexed.hasSubmissionSync,
+      submissionsSyncedAt: indexed.submissionsSyncedAt,
       submissionCount: indexed.submissionCount,
       validReviewCount: indexed.validReviewCount,
       report: indexed.report,

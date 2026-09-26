@@ -3,7 +3,7 @@ import path from "node:path";
 import type { CreateTaskInput } from "@gibwork/sdk";
 import { z } from "zod";
 import { readJson, writeJson } from "../core/json.js";
-import { reviewManifestSchema } from "../core/schemas.js";
+import { battleIdSchema, reviewManifestSchema } from "../core/schemas.js";
 import { syncBattleToDatabase } from "../db/store.js";
 import {
   bountyDraftSchema,
@@ -28,7 +28,8 @@ export async function prepareBountyDraft(input: PrepareBountyDraftInput): Promis
   draft: BountyDraft;
   draftPath: string;
 }> {
-  const battleDirectory = path.resolve(input.workspace, ".bout", "battles", input.battleId);
+  const battleId = battleIdSchema.parse(input.battleId);
+  const battleDirectory = path.resolve(input.workspace, ".bout", "battles", battleId);
   const reviewDirectory = path.join(battleDirectory, "review");
 
   const [manifest, task, candidateA, candidateB] = await Promise.all([
@@ -47,7 +48,7 @@ export async function prepareBountyDraft(input: PrepareBountyDraftInput): Promis
   const deadline = input.deadline === undefined ? null : z.iso.datetime().parse(input.deadline);
   const title = extractTitle(task);
   const content = renderReviewContent({
-    battleId: input.battleId,
+    battleId,
     task,
     candidateA,
     candidateB,
@@ -58,7 +59,7 @@ export async function prepareBountyDraft(input: PrepareBountyDraftInput): Promis
 
   const draft = bountyDraftSchema.parse({
     schemaVersion: 1,
-    battleId: input.battleId,
+    battleId,
     environment: "stage",
     task: {
       title: `Blind code review: ${title}`.slice(0, 160),
@@ -76,7 +77,7 @@ export async function prepareBountyDraft(input: PrepareBountyDraftInput): Promis
 
   const draftPath = path.join(reviewDirectory, "bounty-draft.json");
   await writeJson(draftPath, draft);
-  await syncBattleToDatabase(input.workspace, input.battleId);
+  await syncBattleToDatabase(input.workspace, battleId);
   return { draft, draftPath };
 }
 

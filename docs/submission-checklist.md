@@ -19,7 +19,7 @@
 - [ ] Add redacted terminal screenshots for creation, publication, synchronization, and report generation.
 - [ ] Add a public demo video URL.
 - [ ] Verify every URL in a signed-out browser.
-- [ ] Confirm the repository contains no wallet files, secrets, personal paths, or private battle state.
+- [x] Confirm the repository contains no wallet files, secrets, personal paths, or private battle state.
 
 ## Administrative
 

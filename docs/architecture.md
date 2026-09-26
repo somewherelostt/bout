@@ -45,13 +45,14 @@ review/
   verdict.json
 private/
   identity-map.json
+  publication-attempt.json
   publication.json
   submissions.json
   report.json
   report.md
 ```
 
-`bounty-draft.json` is safe to inspect before publication. `publication.json` is written only after the external create operation returns successfully.
+`bounty-draft.json` is safe to inspect before publication. `publication-attempt.json` is an exclusive pre-submit recovery record; it blocks duplicate publication while an intent may be unresolved. `publication.json` is the final commit record and is written only after the external create operation is confirmed.
 
 `verdict.json` is written only after the local reviewer completes the full structured contract: outcome (`A`, `B`, `TIE`, or `BOTH_FAILED`), confidence, correctness, security, maintainability, evidence, and rationale. Only schema-versioned verdicts count toward evidence metrics; incomplete historical files are left on disk but are not presented as valid results.
 
@@ -71,9 +72,11 @@ Database migrations are versioned and applied during storage initialization. API
 - The current publisher is stage-only.
 - Real-fund publishing requires an exact confirmation phrase.
 - The SDK quote is checked against a caller-supplied maximum total debit before signing.
+- A durable exclusive attempt record is written before network submission, and unresolved attempts block retries.
 - Wallet material is read from an explicit file and never persisted.
 - Submission synchronization discards reviewer profile data before persistence.
 - Winner resolution occurs only inside creator-private report artifacts.
+- Replaceable JSON artifacts use same-directory temporary files and atomic renames; a report's JSON record is written only after its Markdown export succeeds.
 - Financial calls are injectable so tests never broadcast transactions.
 
 ## Planned slices

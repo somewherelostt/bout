@@ -378,7 +378,8 @@ a {
   background: #d09112;
 }
 
-.status-dot.published {
+.status-dot.published,
+.status-dot.synced {
   background: #346dd8;
 }
 
@@ -1184,7 +1185,8 @@ button.table-row:hover {
   background: #fff1ca;
 }
 
-.status-pill.published {
+.status-pill.published,
+.status-pill.synced {
   color: #2457b6;
   background: #e2ecff;
 }

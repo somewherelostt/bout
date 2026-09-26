@@ -1,12 +1,13 @@
-import { mkdir, readFile } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
-import type { CreateTaskInput, CreateTaskResult } from "@gibwork/sdk";
+import type { CreateTaskInput, CreateTaskResult, TaskSubmitResult } from "@gibwork/sdk";
 import {
   createGibworkClient,
   createKeypairSigner,
   signPreparedTransaction,
 } from "@gibwork/sdk/node";
 import { z } from "zod";
+import { battleIdSchema } from "../core/schemas.js";
 import { readJson, writeJson } from "../core/json.js";
 import { syncBattleToDatabase } from "../db/store.js";
 import { toCreateTaskInput } from "./draft.js";
@@ -14,11 +15,24 @@ import {
   bountyDraftSchema,
   decimalAmountSchema,
   decimalToMicros,
+  publicationAttemptSchema,
   publicationRecordSchema,
+  type PublicationAttempt,
 } from "./schemas.js";
 
+export interface PreparedTaskContext {
+  intentId: string;
+  lastValidBlockHeight: number;
+  paymentQuote: CreateTaskResult["paymentQuote"];
+}
+
+export interface TaskCreationCallbacks {
+  onPrepared(context: PreparedTaskContext): Promise<void>;
+  onSubmitted(result: TaskSubmitResult): Promise<void>;
+}
+
 export interface TaskCreator {
-  create(input: CreateTaskInput): Promise<CreateTaskResult>;
+  create(input: CreateTaskInput, callbacks?: TaskCreationCallbacks): Promise<CreateTaskResult>;
 }
 
 export interface PublishBountyInput {
@@ -33,12 +47,23 @@ export async function publishBounty(input: PublishBountyInput): Promise<{
   totalDebit?: string;
   indexWarning?: string;
 }> {
-  const battleDirectory = path.resolve(input.workspace, ".bout", "battles", input.battleId);
+  const battleId = battleIdSchema.parse(input.battleId);
+  const battleDirectory = path.resolve(input.workspace, ".bout", "battles", battleId);
+  const privateDirectory = path.join(battleDirectory, "private");
   const publicationPath = path.join(battleDirectory, "private", "publication.json");
+  const attemptPath = path.join(privateDirectory, "publication-attempt.json");
   try {
     const existing = await readJson(publicationPath, publicationRecordSchema);
     throw new Error(
-      `Battle ${input.battleId} is already published as Gibwork task ${existing.taskId}.`,
+      `Battle ${battleId} is already published as Gibwork task ${existing.taskId}.`,
+    );
+  } catch (error) {
+    if (!isMissingFile(error)) throw error;
+  }
+  try {
+    const attempt = await readJson(attemptPath, publicationAttemptSchema);
+    throw new Error(
+      `Battle ${battleId} has an unresolved ${attempt.status} publish attempt (${attempt.intentId}). Run bout bounty publish-status ${battleId} and do not retry until it is resolved.`,
     );
   } catch (error) {
     if (!isMissingFile(error)) throw error;
@@ -48,30 +73,76 @@ export async function publishBounty(input: PublishBountyInput): Promise<{
     bountyDraftSchema,
   );
 
-  const result = await input.creator.create(toCreateTaskInput(draft));
+  let preparedAttempt: PublicationAttempt | null = null;
+  let result: CreateTaskResult;
+  try {
+    result = await input.creator.create(toCreateTaskInput(draft), {
+      onPrepared: async (context) => {
+        const timestamp = new Date().toISOString();
+        const attempt = publicationAttemptSchema.parse({
+          schemaVersion: 1,
+          battleId,
+          environment: "stage",
+          intentId: context.intentId,
+          lastValidBlockHeight: context.lastValidBlockHeight,
+          paymentQuote: toPaymentQuoteRecord(context.paymentQuote),
+          status: "prepared",
+          preparedAt: timestamp,
+          updatedAt: timestamp,
+        });
+        await mkdir(privateDirectory, { recursive: true });
+        await writeFile(attemptPath, `${JSON.stringify(attempt, null, 2)}\n`, {
+          encoding: "utf8",
+          flag: "wx",
+        });
+        preparedAttempt = attempt;
+      },
+      onSubmitted: async (submitted) => {
+        if (!preparedAttempt) {
+          throw new Error("Gibwork returned a publish result before a prepared intent was saved.");
+        }
+        preparedAttempt = publicationAttemptSchema.parse({
+          ...preparedAttempt,
+          status: submitted.status,
+          taskId: submitted.taskId,
+          ...(submitted.txHash ? { txHash: submitted.txHash } : {}),
+          updatedAt: new Date().toISOString(),
+        });
+        await writeJson(attemptPath, preparedAttempt);
+      },
+    });
+  } catch (error) {
+    if (preparedAttempt) {
+      const reason = error instanceof Error ? error.message : String(error);
+      throw new Error(
+        `${reason} Recovery data is saved at ${attemptPath}. Do not retry until the intent is resolved.`,
+        { cause: error },
+      );
+    }
+    throw error;
+  }
+  if (result.status !== "confirmed" || !result.txHash) {
+    throw new Error(
+      `Gibwork did not confirm task creation for intent ${result.intentId}. Do not retry until its status is resolved.`,
+    );
+  }
   const publication = publicationRecordSchema.parse({
     schemaVersion: 1,
-    battleId: input.battleId,
+    battleId,
     environment: "stage",
     taskId: result.taskId,
     intentId: result.intentId,
     txHash: result.txHash,
-    paymentQuote: {
-      symbol: result.paymentQuote.token.symbol,
-      mintAddress: result.paymentQuote.token.mintAddress,
-      fundingAmount: result.paymentQuote.fundingAmount,
-      platformFeeAmount: result.paymentQuote.platformFee.amount,
-      totalDebit: result.paymentQuote.totalDebit,
-    },
+    paymentQuote: toPaymentQuoteRecord(result.paymentQuote),
     publishedAt: new Date().toISOString(),
   });
 
-  const privateDirectory = path.join(battleDirectory, "private");
   await mkdir(privateDirectory, { recursive: true });
   await writeJson(publicationPath, publication);
+  await rm(attemptPath, { force: true });
   let indexWarning: string | undefined;
   try {
-    await syncBattleToDatabase(input.workspace, input.battleId);
+    await syncBattleToDatabase(input.workspace, battleId);
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
     indexWarning = `The bounty was published and its receipt was saved, but the SQLite index could not be refreshed: ${reason}`;
@@ -94,7 +165,7 @@ export async function createStageTaskCreator(
   const signer = createKeypairSigner(privateKey);
   const maximum = decimalAmountSchema.parse(maximumTotalDebit);
   return {
-    create: async (input) => {
+    create: async (input, callbacks) => {
       const prepared = await client.tasks.prepareCreate(input);
       assertAuthorizedTotal(
         prepared.paymentQuote.totalDebit,
@@ -105,7 +176,13 @@ export async function createStageTaskCreator(
         prepared.serializedTransaction,
         signer,
       );
+      await callbacks?.onPrepared({
+        intentId: prepared.intentId,
+        lastValidBlockHeight: prepared.lastValidBlockHeight,
+        paymentQuote: prepared.paymentQuote,
+      });
       const submitted = await client.tasks.submitCreate(prepared.intentId, signedTransaction);
+      await callbacks?.onSubmitted(submitted);
       if (submitted.status !== "confirmed" || !submitted.txHash) {
         throw new Error(
           `Gibwork did not confirm task creation for intent ${prepared.intentId}. Do not retry until its status is resolved.`,
@@ -119,6 +196,45 @@ export async function createStageTaskCreator(
       };
     },
   };
+}
+
+export async function inspectPublicationState(
+  workspace: string,
+  battleId: string,
+): Promise<
+  | { state: "confirmed"; record: z.infer<typeof publicationRecordSchema>; path: string }
+  | { state: "unresolved"; record: PublicationAttempt; path: string }
+  | { state: "not-started" }
+> {
+  const validatedBattleId = battleIdSchema.parse(battleId);
+  const privateDirectory = path.resolve(
+    workspace,
+    ".bout",
+    "battles",
+    validatedBattleId,
+    "private",
+  );
+  const publicationPath = path.join(privateDirectory, "publication.json");
+  try {
+    return {
+      state: "confirmed",
+      record: await readJson(publicationPath, publicationRecordSchema),
+      path: publicationPath,
+    };
+  } catch (error) {
+    if (!isMissingFile(error)) throw error;
+  }
+  const attemptPath = path.join(privateDirectory, "publication-attempt.json");
+  try {
+    return {
+      state: "unresolved",
+      record: await readJson(attemptPath, publicationAttemptSchema),
+      path: attemptPath,
+    };
+  } catch (error) {
+    if (!isMissingFile(error)) throw error;
+  }
+  return { state: "not-started" };
 }
 
 export function assertAuthorizedTotal(
@@ -153,6 +269,16 @@ async function readPrivateKeyFile(keypairPath: string): Promise<string | readonl
   }
 
   return trimmed;
+}
+
+function toPaymentQuoteRecord(paymentQuote: CreateTaskResult["paymentQuote"]) {
+  return {
+    symbol: paymentQuote.token.symbol,
+    mintAddress: paymentQuote.token.mintAddress,
+    fundingAmount: paymentQuote.fundingAmount,
+    platformFeeAmount: paymentQuote.platformFee.amount,
+    totalDebit: paymentQuote.totalDebit,
+  };
 }
 
 function isMissingFile(error: unknown): boolean {

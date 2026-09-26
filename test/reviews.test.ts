@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { access, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import type { CreateTaskResult, TaskSubmission } from "@gibwork/sdk";
@@ -56,6 +56,35 @@ describe("Gibwork review results", () => {
     });
   });
 
+  it("handles majority, rejected, malformed, and zero-review aggregates deterministically", () => {
+    const rejected = {
+      ...syncedSubmission("rejected", validReview("B", 5)),
+      status: "REJECTED" as const,
+    };
+    const malformed = syncedSubmission("malformed", "WINNER: A");
+    const aggregate = aggregateReviews([
+      syncedSubmission("one", validReview("A", 3)),
+      syncedSubmission("two", validReview("A", 5)),
+      syncedSubmission("three", validReview("B", 4)),
+      rejected,
+      malformed,
+    ]);
+
+    expect(aggregate).toMatchObject({
+      outcome: "A",
+      validReviews: 3,
+      invalidReviews: 1,
+      excludedRejectedReviews: 1,
+      averageConfidence: 4,
+      votes: { A: 2, B: 1, TIE: 0, BOTH_FAILED: 0 },
+    });
+    expect(aggregateReviews([])).toMatchObject({
+      outcome: "NO_CONSENSUS",
+      validReviews: 0,
+      averageConfidence: null,
+    });
+  });
+
   it("syncs real-shaped SDK submissions and exports creator-only reports", async () => {
     const workspace = await createPublishedBattle();
     const strong = sdkSubmission(
@@ -91,14 +120,112 @@ describe("Gibwork review results", () => {
       sourceSlot: "source-1",
       assignedLabel: "A",
     });
-    expect(await readFile(generated.markdownPath, "utf8")).toContain("Consensus: **A**");
+    const markdown = await readFile(generated.markdownPath, "utf8");
+    expect(markdown).toContain("Consensus: **A**");
+    expect(markdown).toContain("**Correctness**");
+    expect(markdown).toContain("**Security**");
+    expect(markdown).toContain("**Maintainability**");
 
     const indexed = await listIndexedBattles(workspace);
     expect(indexed[0]).toMatchObject({
       submissionCount: 2,
       validReviewCount: 1,
       report: { outcome: "A", resolvedLabel: "A" },
+      hasSubmissionSync: true,
     });
+  });
+
+  it("rejects cross-task submissions without replacing the prior sync", async () => {
+    const workspace = await createPublishedBattle();
+    const original = sdkSubmission("88888888-8888-4888-8888-888888888888", validReview("A", 5));
+    await syncBountySubmissions({
+      workspace,
+      battleId,
+      lister: { list: async () => ({ results: [original] }) },
+    });
+    const submissionsPath = path.join(
+      workspace,
+      ".bout",
+      "battles",
+      battleId,
+      "private",
+      "submissions.json",
+    );
+    const before = await readFile(submissionsPath, "utf8");
+
+    await expect(
+      syncBountySubmissions({
+        workspace,
+        battleId,
+        lister: {
+          list: async () => ({
+            results: [
+              sdkSubmission(
+                "99999999-9999-4999-8999-999999999999",
+                validReview("B", 4),
+                { taskId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa" },
+              ),
+            ],
+          }),
+        },
+      }),
+    ).rejects.toThrow("different task; nothing was saved");
+    expect(await readFile(submissionsPath, "utf8")).toBe(before);
+  });
+
+  it("rejects duplicate submission IDs and preserves empty malformed content", async () => {
+    const workspace = await createPublishedBattle();
+    const duplicate = sdkSubmission(
+      "88888888-8888-4888-8888-888888888888",
+      validReview("A", 5),
+    );
+    await expect(
+      syncBountySubmissions({
+        workspace,
+        battleId,
+        lister: { list: async () => ({ results: [duplicate, duplicate] }) },
+      }),
+    ).rejects.toThrow("duplicate submission IDs; nothing was saved");
+
+    const empty = sdkSubmission("99999999-9999-4999-8999-999999999999", "");
+    const synced = await syncBountySubmissions({
+      workspace,
+      battleId,
+      lister: { list: async () => ({ results: [empty] }) },
+    });
+    expect(synced.record.submissions[0]).toMatchObject({
+      content: "",
+      verdict: null,
+    });
+    expect(synced.record.submissions[0]?.parseError).toContain("Invalid structured review");
+  });
+
+  it("records an empty successful sync and invalidates a stale report on resync", async () => {
+    const workspace = await createPublishedBattle();
+    const review = sdkSubmission("88888888-8888-4888-8888-888888888888", validReview("A", 5));
+    await syncBountySubmissions({
+      workspace,
+      battleId,
+      lister: { list: async () => ({ results: [review] }) },
+    });
+    const generated = await generateFinalReport({ workspace, battleId });
+    await syncBountySubmissions({
+      workspace,
+      battleId,
+      lister: { list: async () => ({ results: [] }) },
+    });
+
+    await expect(access(generated.jsonPath)).rejects.toThrow();
+    await expect(access(generated.markdownPath)).rejects.toThrow();
+    const indexed = await listIndexedBattles(workspace);
+    expect(indexed[0]).toMatchObject({
+      hasSubmissionSync: true,
+      submissionCount: 0,
+      validReviewCount: 0,
+      report: null,
+    });
+    const regenerated = await generateFinalReport({ workspace, battleId });
+    expect(regenerated.report.aggregate.outcome).toBe("NO_CONSENSUS");
   });
 });
 
@@ -179,7 +306,11 @@ function validReview(winner: "A" | "B", confidence: number): string {
   ].join("\n");
 }
 
-function sdkSubmission(id: string, content: string): TaskSubmission {
+function sdkSubmission(
+  id: string,
+  content: string,
+  overrides: Partial<TaskSubmission> = {},
+): TaskSubmission {
   return {
     id,
     taskId,
@@ -198,6 +329,7 @@ function sdkSubmission(id: string, content: string): TaskSubmission {
     comments: [],
     media: [],
     asset: null,
+    ...overrides,
   };
 }
 

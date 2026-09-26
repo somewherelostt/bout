@@ -42,6 +42,7 @@ export function HistoryPage({ battles }: { battles: BoutRecord[] }) {
             <option>Draft</option>
             <option>Prepared</option>
             <option>Published</option>
+            <option>Synced</option>
             <option>Complete</option>
           </select>
         </label>

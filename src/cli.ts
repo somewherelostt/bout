@@ -5,7 +5,11 @@ import { Command } from "commander";
 import { createBattle } from "./core/battle.js";
 import { runDoctorChecks } from "./doctor.js";
 import { prepareBountyDraft } from "./marketplace/draft.js";
-import { createStageTaskCreator, publishBounty } from "./marketplace/publish.js";
+import {
+  createStageTaskCreator,
+  inspectPublicationState,
+  publishBounty,
+} from "./marketplace/publish.js";
 import {
   createStageSubmissionLister,
   generateFinalReport,
@@ -80,6 +84,10 @@ battle
     for (const item of battles) {
       const state = item.report
         ? `reported:${item.report.outcome}`
+        : item.verdict
+          ? `reviewed:${item.verdict.winner}`
+        : item.hasSubmissionSync
+          ? "synced"
         : item.hasPublicationReceipt
           ? "published"
           : item.hasBountyDraft
@@ -175,6 +183,34 @@ bounty
       }
     },
   );
+
+bounty
+  .command("publish-status")
+  .description("Inspect the durable local state of a confirmed or unresolved publish attempt.")
+  .argument("<battle-id>", "Local battle UUID")
+  .option("--workspace <path>", "Workspace containing local battle state", process.cwd())
+  .action(async (battleId: string, options: { workspace: string }) => {
+    const result = await inspectPublicationState(options.workspace, battleId);
+    if (result.state === "not-started") {
+      process.stdout.write("STATUS     not started\n");
+      return;
+    }
+    if (result.state === "confirmed") {
+      process.stdout.write("STATUS     confirmed\n");
+      process.stdout.write(`TASK       ${result.record.taskId}\n`);
+      process.stdout.write(`TX         ${result.record.txHash}\n`);
+      process.stdout.write(`RECORD     ${result.path}\n`);
+      return;
+    }
+    process.stdout.write(`STATUS     unresolved (${result.record.status})\n`);
+    process.stdout.write(`INTENT     ${result.record.intentId}\n`);
+    if (result.record.taskId) process.stdout.write(`TASK       ${result.record.taskId}\n`);
+    if (result.record.txHash) process.stdout.write(`TX         ${result.record.txHash}\n`);
+    process.stdout.write(`DEBIT      ${result.record.paymentQuote.totalDebit} ${result.record.paymentQuote.symbol}\n`);
+    process.stdout.write(`RECOVERY   ${result.path}\n`);
+    process.stdout.write("ACTION     Do not publish again until Gibwork resolves this intent.\n");
+    process.exitCode = 2;
+  });
 
 bounty
   .command("sync")

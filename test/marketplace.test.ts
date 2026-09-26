@@ -1,11 +1,16 @@
-import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { access, mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import type { CreateTaskResult } from "@gibwork/sdk";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createBattle } from "../src/core/battle.js";
 import { prepareBountyDraft } from "../src/marketplace/draft.js";
-import { assertAuthorizedTotal, publishBounty } from "../src/marketplace/publish.js";
+import {
+  assertAuthorizedTotal,
+  inspectPublicationState,
+  publishBounty,
+  type TaskCreator,
+} from "../src/marketplace/publish.js";
 
 const temporaryDirectories: string[] = [];
 const battleId = "22222222-2222-4222-8222-222222222222";
@@ -97,7 +102,76 @@ describe("marketplace workflow", () => {
     );
     expect(() => assertAuthorizedTotal("1.00", "1.00")).not.toThrow();
   });
+
+  it("does not persist an unconfirmed adapter result as a publication", async () => {
+    const workspace = await createBattleFixture();
+    await prepareBountyDraft({ workspace, battleId, poolAmount: "1.00", minimumPayout: "1.00" });
+    const creator: TaskCreator = {
+      create: async () => ({ ...createResult(), status: "processing", txHash: undefined }),
+    };
+
+    await expect(publishBounty({ workspace, battleId, creator })).rejects.toThrow(
+      "did not confirm task creation",
+    );
+    await expect(
+      access(path.join(workspace, ".bout", "battles", battleId, "private", "publication.json")),
+    ).rejects.toThrow();
+  });
+
+  it("persists an exclusive recovery record before submit and blocks a retry", async () => {
+    const workspace = await createBattleFixture();
+    await prepareBountyDraft({ workspace, battleId, poolAmount: "1.00", minimumPayout: "1.00" });
+    let calls = 0;
+    const creator: TaskCreator = {
+      create: async (_input, callbacks) => {
+        calls += 1;
+        await callbacks?.onPrepared({
+          intentId: createResult().intentId,
+          lastValidBlockHeight: 42,
+          paymentQuote: createResult().paymentQuote,
+        });
+        throw new Error("simulated ambiguous submit");
+      },
+    };
+
+    await expect(publishBounty({ workspace, battleId, creator })).rejects.toThrow(
+      "Recovery data is saved",
+    );
+    const state = await inspectPublicationState(workspace, battleId);
+    expect(state).toMatchObject({
+      state: "unresolved",
+      record: { status: "prepared", intentId: createResult().intentId },
+    });
+    await expect(publishBounty({ workspace, battleId, creator })).rejects.toThrow(
+      "has an unresolved prepared publish attempt",
+    );
+    expect(calls).toBe(1);
+  });
+
+  it("rejects non-UUID battle identifiers before resolving workspace paths", async () => {
+    const creator: TaskCreator = { create: async () => createResult() };
+    await expect(
+      publishBounty({ workspace: "C:\\safe-workspace", battleId: "../../outside", creator }),
+    ).rejects.toThrow();
+    await expect(inspectPublicationState("C:\\safe-workspace", "../../outside")).rejects.toThrow();
+  });
 });
+
+function createResult(): CreateTaskResult {
+  return {
+    taskId: "33333333-3333-4333-8333-333333333333",
+    intentId: "44444444-4444-4444-8444-444444444444",
+    txHash: "example-transaction-hash",
+    lastValidBlockHeight: 42,
+    paymentQuote: {
+      token: { mintAddress: "mint", symbol: "USDC", decimals: 6 },
+      fundingAmount: "1.00",
+      platformFee: { percent: 0, amount: "0.00" },
+      totalDebit: "1.00",
+    },
+    status: "confirmed",
+  };
+}
 
 async function createBattleFixture(): Promise<string> {
   const workspace = await mkdtemp(path.join(os.tmpdir(), "bout-marketplace-"));

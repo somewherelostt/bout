@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export const sha256Schema = z.string().regex(/^[a-f0-9]{64}$/u, "expected a SHA-256 digest");
+export const battleIdSchema = z.uuid();
 
 export const candidateLabelSchema = z.enum(["A", "B"]);
 
@@ -12,7 +13,7 @@ export const publicCandidateSchema = z.object({
 
 export const reviewManifestSchema = z.object({
   schemaVersion: z.literal(1),
-  battleId: z.uuid(),
+  battleId: battleIdSchema,
   createdAt: z.iso.datetime(),
   task: z.object({
     file: z.literal("task.md"),
@@ -29,7 +30,7 @@ export type ReviewManifest = z.infer<typeof reviewManifestSchema>;
 
 export const identityMapSchema = z.object({
   schemaVersion: z.literal(1),
-  battleId: z.uuid(),
+  battleId: battleIdSchema,
   candidates: z.tuple([
     z.object({
       sourceSlot: z.literal("source-1"),

@@ -1,4 +1,4 @@
-export type BoutStatus = "Published" | "Prepared" | "Complete" | "Draft";
+export type BoutStatus = "Published" | "Prepared" | "Synced" | "Complete" | "Draft";
 
 export interface BoutRecord {
   id: string;
@@ -17,6 +17,8 @@ export interface BoutRecord {
   publicationTaskId: string | null;
   hasBountyDraft: boolean;
   hasPublicationReceipt: boolean;
+  hasSubmissionSync: boolean;
+  submissionsSyncedAt: string | null;
   submissionCount: number;
   validReviewCount: number;
   report: ReportSummary | null;

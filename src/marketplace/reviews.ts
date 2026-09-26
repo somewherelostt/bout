@@ -1,13 +1,19 @@
-import { mkdir, rm, writeFile } from "node:fs/promises";
+import { mkdir, rm } from "node:fs/promises";
 import path from "node:path";
 import type {
   Paginated,
   SubmissionPaginationQuery,
   TaskSubmission,
 } from "@gibwork/sdk";
-import type { ZodType } from "zod";
-import { identityMapSchema, reviewManifestSchema, verdictInputSchema, type VerdictInput } from "../core/schemas.js";
-import { readJson, writeJson } from "../core/json.js";
+import { type ZodType } from "zod";
+import {
+  battleIdSchema,
+  identityMapSchema,
+  reviewManifestSchema,
+  verdictInputSchema,
+  type VerdictInput,
+} from "../core/schemas.js";
+import { readJson, writeJson, writeText } from "../core/json.js";
 import { syncBattleToDatabase } from "../db/store.js";
 import { createStageGibworkClient } from "./publish.js";
 import {
@@ -41,7 +47,8 @@ export async function syncBountySubmissions(input: {
   lister: SubmissionLister;
   now?: () => Date;
 }): Promise<{ record: SubmissionSync; submissionsPath: string }> {
-  const battleDirectory = battlePath(input.workspace, input.battleId);
+  const battleId = battleIdSchema.parse(input.battleId);
+  const battleDirectory = battlePath(input.workspace, battleId);
   const publication = await readRequiredJson(
     path.join(battleDirectory, "private", "publication.json"),
     publicationRecordSchema,
@@ -51,12 +58,19 @@ export async function syncBountySubmissions(input: {
   if (page.results.some((submission) => submission.taskId !== publication.taskId)) {
     throw new Error("Gibwork returned a submission for a different task; nothing was saved.");
   }
+  const submissionIds = new Set(page.results.map((submission) => submission.id));
+  if (submissionIds.size !== page.results.length) {
+    throw new Error("Gibwork returned duplicate submission IDs; nothing was saved.");
+  }
   const submissions = page.results
     .map(normalizeSubmission)
-    .sort((left, right) => left.createdAt.localeCompare(right.createdAt));
+    .sort(
+      (left, right) =>
+        left.createdAt.localeCompare(right.createdAt) || left.id.localeCompare(right.id),
+    );
   const record = submissionSyncSchema.parse({
     schemaVersion: 1,
-    battleId: input.battleId,
+    battleId,
     taskId: publication.taskId,
     syncedAt: (input.now ?? (() => new Date()))().toISOString(),
     submissions,
@@ -65,12 +79,10 @@ export async function syncBountySubmissions(input: {
   const privateDirectory = path.join(battleDirectory, "private");
   await mkdir(privateDirectory, { recursive: true });
   const submissionsPath = path.join(privateDirectory, "submissions.json");
-  await Promise.all([
-    rm(path.join(privateDirectory, "report.json"), { force: true }),
-    rm(path.join(privateDirectory, "report.md"), { force: true }),
-  ]);
   await writeJson(submissionsPath, record);
-  await syncBattleToDatabase(input.workspace, input.battleId);
+  await rm(path.join(privateDirectory, "report.json"), { force: true });
+  await rm(path.join(privateDirectory, "report.md"), { force: true });
+  await syncBattleToDatabase(input.workspace, battleId);
   return { record, submissionsPath };
 }
 
@@ -146,7 +158,8 @@ export async function generateFinalReport(input: {
   battleId: string;
   now?: () => Date;
 }): Promise<{ report: FinalReport; jsonPath: string; markdownPath: string }> {
-  const battleDirectory = battlePath(input.workspace, input.battleId);
+  const battleId = battleIdSchema.parse(input.battleId);
+  const battleDirectory = battlePath(input.workspace, battleId);
   const [manifest, identityMap, sync] = await Promise.all([
     readRequiredJson(
       path.join(battleDirectory, "review", "manifest.json"),
@@ -170,7 +183,7 @@ export async function generateFinalReport(input: {
     : null;
   const report = finalReportSchema.parse({
     schemaVersion: 1,
-    battleId: input.battleId,
+    battleId,
     taskId: sync.taskId,
     generatedAt: (input.now ?? (() => new Date()))().toISOString(),
     submissionsSyncedAt: sync.syncedAt,
@@ -196,11 +209,9 @@ export async function generateFinalReport(input: {
   await mkdir(privateDirectory, { recursive: true });
   const jsonPath = path.join(privateDirectory, "report.json");
   const markdownPath = path.join(privateDirectory, "report.md");
-  await Promise.all([
-    writeJson(jsonPath, report),
-    writeFile(markdownPath, renderMarkdownReport(report), "utf8"),
-  ]);
-  await syncBattleToDatabase(input.workspace, input.battleId);
+  await writeText(markdownPath, renderMarkdownReport(report));
+  await writeJson(jsonPath, report);
+  await syncBattleToDatabase(input.workspace, battleId);
   return { report, jsonPath, markdownPath };
 }
 
@@ -273,13 +284,25 @@ function renderMarkdownReport(report: FinalReport): string {
       `- Outcome: **${review.verdict.winner}**`,
       `- Confidence: ${review.verdict.confidence}/5`,
       "",
+      "**Correctness**",
+      "",
+      escapeMarkdown(review.verdict.correctness),
+      "",
+      "**Security**",
+      "",
+      escapeMarkdown(review.verdict.security),
+      "",
+      "**Maintainability**",
+      "",
+      escapeMarkdown(review.verdict.maintainability),
+      "",
       "**Evidence**",
       "",
-      ...review.verdict.evidence.map((item) => `- ${item}`),
+      ...review.verdict.evidence.map((item) => `- ${escapeMarkdown(item)}`),
       "",
       "**Rationale**",
       "",
-      review.verdict.rationale,
+      escapeMarkdown(review.verdict.rationale),
     ].join("\n")).join("\n\n");
 
   return [
@@ -313,6 +336,10 @@ function renderMarkdownReport(report: FinalReport): string {
     reviewSections,
     "",
   ].join("\n");
+}
+
+function escapeMarkdown(value: string): string {
+  return value.replace(/([\\`*_[\]{}()#+\-.!|>])/gu, "\\$1");
 }
 
 function battlePath(workspace: string, battleId: string): string {

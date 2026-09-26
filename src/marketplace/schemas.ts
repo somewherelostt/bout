@@ -28,6 +28,16 @@ export const bountyDraftSchema = z.object({
 
 export type BountyDraft = z.infer<typeof bountyDraftSchema>;
 
+const paymentQuoteRecordSchema = z.object({
+  symbol: z.string().min(1),
+  mintAddress: z.string().min(1),
+  fundingAmount: decimalAmountSchema,
+  platformFeeAmount: z
+    .string()
+    .regex(/^(?:0|[1-9]\d*)(?:\.\d{1,6})?$/u, "expected a decimal with at most 6 places"),
+  totalDebit: decimalAmountSchema,
+});
+
 export const publicationRecordSchema = z.object({
   schemaVersion: z.literal(1),
   battleId: z.uuid(),
@@ -35,21 +45,27 @@ export const publicationRecordSchema = z.object({
   taskId: z.uuid(),
   intentId: z.uuid(),
   txHash: z.string().min(1),
-  paymentQuote: z
-    .object({
-      symbol: z.string().min(1),
-      mintAddress: z.string().min(1),
-      fundingAmount: decimalAmountSchema,
-      platformFeeAmount: z
-        .string()
-        .regex(/^(?:0|[1-9]\d*)(?:\.\d{1,6})?$/u, "expected a decimal with at most 6 places"),
-      totalDebit: decimalAmountSchema,
-    })
-    .optional(),
+  paymentQuote: paymentQuoteRecordSchema.optional(),
   publishedAt: z.iso.datetime(),
 });
 
 export type PublicationRecord = z.infer<typeof publicationRecordSchema>;
+
+export const publicationAttemptSchema = z.object({
+  schemaVersion: z.literal(1),
+  battleId: z.uuid(),
+  environment: z.literal("stage"),
+  intentId: z.uuid(),
+  lastValidBlockHeight: z.number().int().nonnegative(),
+  paymentQuote: paymentQuoteRecordSchema,
+  status: z.enum(["prepared", "processing", "failed", "confirmed"]),
+  taskId: z.uuid().optional(),
+  txHash: z.string().min(1).optional(),
+  preparedAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
+});
+
+export type PublicationAttempt = z.infer<typeof publicationAttemptSchema>;
 
 export const submissionStatusSchema = z.enum([
   "OPEN",
@@ -64,7 +80,7 @@ export const submissionStatusSchema = z.enum([
 export const syncedSubmissionSchema = z.object({
   id: z.string().min(1),
   taskId: z.string().min(1),
-  content: z.string().min(1),
+  content: z.string(),
   status: submissionStatusSchema,
   createdAt: z.iso.datetime(),
   rating: z.number().finite().nullable(),

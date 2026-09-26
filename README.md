@@ -91,6 +91,15 @@ npm run dev:web
 
 Open `http://localhost:4173`. The workspace includes the bout composer, history, judge queue, vault, evidence report, method, security posture, awards, and blind comparison flow. It reads and writes the real local SQLite index and `.bout` workspace artifacts through a local API; there is no seeded browser dataset.
 
+The web workspace accepts these optional process environment variables (copy `.env.example` to an untracked `.env` if your launcher loads env files):
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `BOUT_WORKSPACE` | Repository root | Directory containing the local `.bout` state. |
+| `BOUT_WEB_API_PORT` | `4174` | Loopback port used by the local API. |
+| `GIBWORK_PRODUCTION` | `false` | Selects production only for read-only live bounty discovery in the web workspace. CLI publication remains stage-only. |
+| `SOLANA_PRIVATE_KEY` | unset | Optional creator credential for live Gibwork discovery; keep it only in the local process environment. |
+
 The composer creates a real anonymized battle bundle and prepares its Gibwork bounty draft. It does not publish the draft or move funds. To read live code-review bounties into the judge queue, provide `SOLANA_PRIVATE_KEY` only to the local API process before starting the workspace. The key is never returned to browser code.
 
 The review screen stores the complete reviewer contract—four-way outcome, confidence, correctness, security, maintainability, concrete evidence, and rationale—in `review/verdict.json`. Evidence metrics are computed from readable local artifacts and report their denominator and limits instead of inventing empty-state results.
@@ -186,6 +195,14 @@ bout bounty publish <battle-id> \
 
 Bout refuses to publish unless the confirmation phrase matches exactly. It prepares the SDK transaction first and refuses to sign when Gibwork's quoted total debit exceeds `--max-total`. Wallet material is read from the supplied file, used locally for signing, and never written into battle state or command output.
 
+Immediately before submission, Bout writes an exclusive creator-private recovery record. If the request times out, returns `processing`, or otherwise becomes uncertain, that record blocks another publish attempt so the same battle cannot be funded twice. Inspect it with:
+
+```bash
+bout bounty publish-status <battle-id>
+```
+
+An unresolved result exits with status code `2` and prints the intent, any known task/transaction IDs, the quoted debit, and the recovery-file path. Do not delete the record or publish again until Gibwork has resolved the intent. A confirmed publish replaces it with `private/publication.json`.
+
 ## Synchronize reviews and generate the result
 
 After reviewers submit their structured decisions to the published Gibwork bounty, retrieve every creator-visible submission:
@@ -270,6 +287,7 @@ bout battle create [options]
 bout battle list [options]
 bout bounty prepare <battle-id> [options]
 bout bounty publish <battle-id> [options]
+bout bounty publish-status <battle-id> [options]
 bout bounty sync <battle-id> [options]
 bout report generate <battle-id> [options]
 ```

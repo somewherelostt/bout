@@ -111,7 +111,7 @@ export function HomePage({ onCreate }: HomePageProps) {
             <span>Bounty pool (USDC)</span>
             <span className="input-with-icon">
               <DollarSign size={16} />
-              <input type="number" min="0.000001" step="0.01" value={pool} onChange={(event) => setPool(Number(event.target.value))} required />
+              <input type="number" min="0.000001" step="0.000001" value={pool} onChange={(event) => setPool(Number(event.target.value))} required />
             </span>
             <small>Prepared locally; no funds move.</small>
           </label>
@@ -119,7 +119,7 @@ export function HomePage({ onCreate }: HomePageProps) {
             <span>Minimum payout (USDC)</span>
             <span className="input-with-icon">
               <DollarSign size={16} />
-              <input type="number" min="0.000001" step="0.01" value={minimumPayout} onChange={(event) => setMinimumPayout(Number(event.target.value))} required />
+              <input type="number" min="0.000001" step="0.000001" value={minimumPayout} onChange={(event) => setMinimumPayout(Number(event.target.value))} required />
             </span>
             <small>Must not exceed the pool.</small>
           </label>

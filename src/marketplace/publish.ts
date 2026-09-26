@@ -1,6 +1,11 @@
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
-import type { CreateTaskInput, CreateTaskResult, TaskSubmitResult } from "@gibwork/sdk";
+import type {
+  CreateTaskInput,
+  CreateTaskResult,
+  PreparedTaskIntent,
+  TaskSubmitResult,
+} from "@gibwork/sdk";
 import {
   createGibworkClient,
   createKeypairSigner,
@@ -36,10 +41,52 @@ export interface TaskCreator {
   create(input: CreateTaskInput, callbacks?: TaskCreationCallbacks): Promise<CreateTaskResult>;
 }
 
+export interface TaskQuoter {
+  prepare(input: CreateTaskInput): Promise<PreparedTaskIntent>;
+}
+
 export interface PublishBountyInput {
   workspace: string;
   battleId: string;
   creator: TaskCreator;
+}
+
+export async function quoteBounty(input: {
+  workspace: string;
+  battleId: string;
+  quoter: TaskQuoter;
+}): Promise<{
+  fundingAmount: string;
+  platformFeeAmount: string;
+  totalDebit: string;
+  symbol: string;
+}> {
+  const battleId = battleIdSchema.parse(input.battleId);
+  const publicationState = await inspectPublicationState(input.workspace, battleId);
+  if (publicationState.state === "confirmed") {
+    throw new Error(
+      `Battle ${battleId} is already published as Gibwork task ${publicationState.record.taskId}.`,
+    );
+  }
+  if (publicationState.state === "unresolved") {
+    throw new Error(
+      `Battle ${battleId} has an unresolved ${publicationState.record.status} publish attempt (${publicationState.record.intentId}). Do not create another intent until it is resolved.`,
+    );
+  }
+
+  const battleDirectory = path.resolve(input.workspace, ".bout", "battles", battleId);
+  const draft = await readJson(
+    path.join(battleDirectory, "review", "bounty-draft.json"),
+    bountyDraftSchema,
+  );
+  const prepared = await input.quoter.prepare(toCreateTaskInput(draft));
+
+  return {
+    fundingAmount: prepared.paymentQuote.fundingAmount,
+    platformFeeAmount: prepared.paymentQuote.platformFee.amount,
+    totalDebit: prepared.paymentQuote.totalDebit,
+    symbol: prepared.paymentQuote.token.symbol,
+  };
 }
 
 export async function publishBounty(input: PublishBountyInput): Promise<{
@@ -198,6 +245,13 @@ export async function createStageTaskCreator(
         paymentQuote: prepared.paymentQuote,
       };
     },
+  };
+}
+
+export async function createStageTaskQuoter(keypairPath: string): Promise<TaskQuoter> {
+  const client = await createStageGibworkClient(keypairPath);
+  return {
+    prepare: (input) => client.tasks.prepareCreate(input),
   };
 }
 

@@ -9,6 +9,7 @@ import {
   assertAuthorizedTotal,
   inspectPublicationState,
   publishBounty,
+  quoteBounty,
   type TaskCreator,
 } from "../src/marketplace/publish.js";
 
@@ -101,6 +102,59 @@ describe("marketplace workflow", () => {
       "exceeds the authorized maximum of 1.00. Nothing was signed",
     );
     expect(() => assertAuthorizedTotal("1.00", "1.00")).not.toThrow();
+  });
+
+  it("returns a live quote without writing publication state", async () => {
+    const workspace = await createBattleFixture();
+    await prepareBountyDraft({
+      workspace,
+      battleId,
+      poolAmount: "1.00",
+      minimumPayout: "1.00",
+    });
+
+    const quote = await quoteBounty({
+      workspace,
+      battleId,
+      quoter: {
+        prepare: async () => ({
+          intentId: "44444444-4444-4444-8444-444444444444",
+          taskId: "33333333-3333-4333-8333-333333333333",
+          serializedTransaction: "unsigned-transaction",
+          lastValidBlockHeight: 42,
+          paymentQuote: createResult().paymentQuote,
+        }),
+      },
+    });
+
+    expect(quote).toEqual({
+      fundingAmount: "1.00",
+      platformFeeAmount: "0.00",
+      totalDebit: "1.00",
+      symbol: "USDC",
+    });
+    expect(await inspectPublicationState(workspace, battleId)).toEqual({ state: "not-started" });
+  });
+
+  it("does not request another quote after the battle is published", async () => {
+    const workspace = await createBattleFixture();
+    await prepareBountyDraft({
+      workspace,
+      battleId,
+      poolAmount: "1.00",
+      minimumPayout: "0.50",
+    });
+    await publishBounty({
+      workspace,
+      battleId,
+      creator: { create: async () => createResult() },
+    });
+    const prepare = vi.fn();
+
+    await expect(
+      quoteBounty({ workspace, battleId, quoter: { prepare } }),
+    ).rejects.toThrow("is already published as Gibwork task");
+    expect(prepare).not.toHaveBeenCalled();
   });
 
   it("does not persist an unconfirmed adapter result as a publication", async () => {

@@ -6,9 +6,11 @@ import { createBattle } from "./core/battle.js";
 import { runDoctorChecks } from "./doctor.js";
 import { prepareBountyDraft } from "./marketplace/draft.js";
 import {
+  createStageTaskQuoter,
   createStageTaskCreator,
   inspectPublicationState,
   publishBounty,
+  quoteBounty,
 } from "./marketplace/publish.js";
 import {
   createStageSubmissionLister,
@@ -138,6 +140,31 @@ bounty
       process.stdout.write(`PAYOUT    ${draft.task.minSubmissionAmount} USDC minimum\n`);
       process.stdout.write("NETWORK   stage (uses real mainnet USDC)\n");
       process.stdout.write("SPEND     none; preparation is local only\n");
+    },
+  );
+
+bounty
+  .command("quote")
+  .description("Request the live stage payment quote without signing or submitting a transaction.")
+  .argument("<battle-id>", "Local battle UUID")
+  .requiredOption("--keypair <path>", "Path to a local wallet keypair file")
+  .option("--workspace <path>", "Workspace containing local battle state")
+  .action(
+    async (
+      battleId: string,
+      options: { keypair: string; workspace?: string },
+    ) => {
+      const quoter = await createStageTaskQuoter(options.keypair);
+      const quote = await quoteBounty({
+        workspace: workspaceOrCurrentDirectory(options.workspace),
+        battleId,
+        quoter,
+      });
+      process.stdout.write(`FUNDING    ${quote.fundingAmount} ${quote.symbol}\n`);
+      process.stdout.write(`FEE        ${quote.platformFeeAmount} ${quote.symbol}\n`);
+      process.stdout.write(`TOTAL      ${quote.totalDebit} ${quote.symbol}\n`);
+      process.stdout.write("SPEND      none; payment transaction was not signed or submitted\n");
+      process.stdout.write("NOTE       the unpaid stage intent is temporary and may expire\n");
     },
   );
 

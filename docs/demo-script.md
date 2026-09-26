@@ -4,6 +4,7 @@ This runbook keeps the final demonstration terminal-first and within five minute
 
 ## Before recording
 
+- Complete the real-money procedure in [`funded-stage-runbook.md`](funded-stage-runbook.md).
 - Use a dedicated low-balance stage wallet.
 - Close notifications and unrelated applications.
 - Use a clean workspace with no personal paths in the terminal prompt.

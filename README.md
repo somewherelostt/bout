@@ -207,6 +207,18 @@ This command:
 
 Review the generated draft before publishing it.
 
+Request Gibwork's current stage quote before funding the dedicated wallet:
+
+```bash
+bout bounty quote <battle-id> \
+  --keypair /absolute/path/to/keypair.json
+```
+
+This authenticated prepare-only request creates a temporary unpaid stage intent. It prints the
+funding amount, platform fee, and exact total debit, but does not sign or submit the payment
+transaction. The wallet must already be linked to an active Gibwork user. Fund the wallet only
+after checking this output, then use the printed `TOTAL` as the `--max-total` ceiling below.
+
 ## Publish to stage
 
 > [!WARNING]
@@ -217,7 +229,7 @@ Publishing is a separate, explicitly gated action:
 ```bash
 bout bounty publish <battle-id> \
   --keypair /absolute/path/to/keypair.json \
-  --max-total 1.00 \
+  --max-total <quoted-total> \
   --confirm-real-funds "I UNDERSTAND STAGE USES REAL USDC"
 ```
 
@@ -314,6 +326,7 @@ bout doctor
 bout battle create [options]
 bout battle list [options]
 bout bounty prepare <battle-id> [options]
+bout bounty quote <battle-id> [options]
 bout bounty publish <battle-id> [options]
 bout bounty publish-status <battle-id> [options]
 bout bounty sync <battle-id> [options]
@@ -336,6 +349,7 @@ npm run check
 
 - [Architecture and trust boundaries](docs/architecture.md)
 - [Five-minute demo runbook](docs/demo-script.md)
+- [Funded Gibwork stage runbook](docs/funded-stage-runbook.md)
 - [Paste-ready Gibwork submission package](docs/gibwork-submission.md)
 - [Hackathon submission checklist](docs/submission-checklist.md)
 - [Security policy](SECURITY.md)

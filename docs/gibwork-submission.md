@@ -80,7 +80,7 @@ bout battle create \
 Prepare its bounty draft with the battle ID returned above:
 
 ```bash
-bout bounty prepare <battle-id> --pool 1.00 --min-payout 1.00
+bout bounty prepare <battle-id> --pool 1.00 --min-payout 0.50
 ```
 
 The README documents the guarded stage publishing, synchronization, and reporting commands. A dedicated low-balance wallet is required for the real stage demonstration because the stage environment uses real mainnet USDC.

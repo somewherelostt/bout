@@ -6,6 +6,7 @@
 - [x] Gibwork SDK is required for publication and review synchronization.
 - [x] Anonymous A/B construction, integrity hashes, and private identity mapping.
 - [x] Offline bounty preparation and explicitly gated stage publication.
+- [x] Prepare-only live quote command that exposes the exact debit before funding or signing.
 - [x] Creator-owned submission synchronization with no seeded product data.
 - [x] Structured review validation, deterministic consensus, and private winner resolution.
 - [x] Markdown and JSON final report export.
@@ -27,7 +28,7 @@
 ## Administrative
 
 - [x] Hackathon role received.
-- [ ] Attend and record attendance for two Discord hackathon sessions.
-- [ ] Confirm any strict requirements announced verbally during the first session.
+- [ ] Attend and record attendance for two Discord hackathon sessions. **Progress: 1 of 2 attended.**
+- [x] Confirm any strict requirements announced verbally during the first session. **No additional requirements were reported.**
 - [x] Make the GitHub repository public only after the final secret scan.
 - [ ] Submit the repository, video, screenshots, setup instructions, and exported deliverables before the bounty deadline.

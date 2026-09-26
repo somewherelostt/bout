@@ -87,7 +87,7 @@ describe("marketplace workflow", () => {
 });
 
 async function createBattleFixture(): Promise<string> {
-  const workspace = await mkdtemp(path.join(os.tmpdir(), "review-marketplace-"));
+  const workspace = await mkdtemp(path.join(os.tmpdir(), "bout-marketplace-"));
   temporaryDirectories.push(workspace);
   await mkdir(workspace, { recursive: true });
 

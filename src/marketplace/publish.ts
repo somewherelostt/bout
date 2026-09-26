@@ -30,7 +30,7 @@ export async function publishBounty(input: PublishBountyInput): Promise<{
   taskId: string;
   publicationPath: string;
 }> {
-  const battleDirectory = path.resolve(input.workspace, ".review-harness", "battles", input.battleId);
+  const battleDirectory = path.resolve(input.workspace, ".bout", "battles", input.battleId);
   const draft = await readJson(
     path.join(battleDirectory, "review", "bounty-draft.json"),
     bountyDraftSchema,

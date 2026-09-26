@@ -10,8 +10,8 @@ import { createStageTaskCreator, publishBounty } from "./marketplace/publish.js"
 const VERSION = "0.1.0";
 
 const program = new Command()
-  .name("review-harness")
-  .description("Create reproducible, blind reviews of competing code changes.")
+  .name("bout")
+  .description("Paid blind review for competing code patches, powered by Gibwork.")
   .version(VERSION);
 
 program

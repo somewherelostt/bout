@@ -45,7 +45,7 @@ export async function prepareBountyDraft(input: PrepareBountyDraftInput): Promis
   draft: BountyDraft;
   draftPath: string;
 }> {
-  const battleDirectory = path.resolve(input.workspace, ".review-harness", "battles", input.battleId);
+  const battleDirectory = path.resolve(input.workspace, ".bout", "battles", input.battleId);
   const reviewDirectory = path.join(battleDirectory, "review");
 
   const [manifest, task, candidateA, candidateB] = await Promise.all([

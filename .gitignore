@@ -4,7 +4,7 @@ coverage/
 .env
 .env.*
 !.env.example
-.review-harness/
+.bout/
 *.log
 .DS_Store
 Thumbs.db

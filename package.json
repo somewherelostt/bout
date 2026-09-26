@@ -1,11 +1,11 @@
 {
-  "name": "@somewherelostt/blind-review-harness",
+  "name": "@somewherelostt/bout",
   "version": "0.1.0",
-  "description": "Terminal-first blind evaluation workflow for competing code changes.",
+  "description": "Bout — paid blind review for competing code patches, powered by Gibwork.",
   "type": "module",
   "private": true,
   "bin": {
-    "review-harness": "dist/cli.js"
+    "bout": "dist/cli.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",

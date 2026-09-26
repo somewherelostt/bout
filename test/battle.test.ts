@@ -80,7 +80,7 @@ describe("createBattle", () => {
 });
 
 async function createFixture(): Promise<string> {
-  const workspace = await mkdtemp(path.join(os.tmpdir(), "review-harness-"));
+  const workspace = await mkdtemp(path.join(os.tmpdir(), "bout-"));
   temporaryDirectories.push(workspace);
 
   await Promise.all([

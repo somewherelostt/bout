@@ -1,6 +1,8 @@
-# Blind Review Harness
+# Bout
 
-A terminal-first workflow for comparing two code changes under the same task and test conditions, then collecting a structured human judgment.
+**Paid blind review for competing code patches, powered by Gibwork.**
+
+Bout is a terminal-first workflow for comparing two code patches under the same task and test conditions, then collecting a structured human judgment.
 
 The project is intentionally CLI-first. It produces inspectable files instead of requiring a dashboard, keeps candidate identities hidden during review, and records hashes for every input used in a decision.
 
@@ -33,7 +35,7 @@ npm run dev -- battle create \
   --verify "npm test"
 ```
 
-The command creates `.review-harness/battles/<id>/review`, which contains only anonymous reviewer material. The source-to-label mapping is kept under the battle's separate `private` directory.
+The command creates `.bout/battles/<id>/review`, which contains only anonymous reviewer material. The source-to-label mapping is kept under the battle's separate `private` directory.
 
 ## Prepare a reviewer bounty
 

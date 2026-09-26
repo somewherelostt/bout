@@ -56,7 +56,7 @@ export async function createBattle(
 
   const battleId = idFactory();
   const createdAt = now().toISOString();
-  const rootDirectory = path.resolve(input.workspace, ".review-harness", "battles");
+  const rootDirectory = path.resolve(input.workspace, ".bout", "battles");
   const battleDirectory = path.join(rootDirectory, battleId);
   const temporaryDirectory = path.join(rootDirectory, `.creating-${battleId}`);
   const reviewDirectory = path.join(temporaryDirectory, "review");

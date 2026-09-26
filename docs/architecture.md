@@ -27,7 +27,7 @@ The review bundle contains only anonymous labels, normalized filenames, task ins
 
 ## Local state
 
-Each battle is written atomically under `.review-harness/battles/<battle-id>`:
+Each battle is written atomically under `.bout/battles/<battle-id>`:
 
 ```text
 review/

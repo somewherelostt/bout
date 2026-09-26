@@ -10,13 +10,16 @@ import { sha256 } from "../../src/core/hash.js";
 import { verdictInputSchema } from "../../src/core/schemas.js";
 import { saveVerdict } from "../../src/core/verdict.js";
 import {
-  getBoutArtifactRoot,
-  getBoutDatabasePath,
   listIndexedBattles,
   reconcileWorkspaceDatabase,
   type IndexedBattle,
 } from "../../src/db/store.js";
 import { prepareBountyDraft } from "../../src/marketplace/draft.js";
+import {
+  genericPublicError,
+  publicStorageDescriptor,
+  toPublicErrorMessage,
+} from "./public-state.js";
 import type {
   BoutRecord,
   LiveBounty,
@@ -44,12 +47,7 @@ const server = createServer(async (request, response) => {
     if (request.method === "GET" && request.url === "/api/health") {
       return sendJson(response, 200, {
         ok: true,
-        workspace,
-        storage: {
-          engine: "sqlite",
-          databasePath: getBoutDatabasePath(workspace),
-          artifactRoot: getBoutArtifactRoot(workspace),
-        },
+        storage: publicStorageDescriptor,
       });
     }
 
@@ -122,7 +120,12 @@ const server = createServer(async (request, response) => {
 
     return sendJson(response, 404, { error: "Not found" });
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = toPublicErrorMessage(error);
+    if (message === genericPublicError) {
+      process.stderr.write(
+        `Request failed: ${error instanceof Error ? error.message : String(error)}\n`,
+      );
+    }
     return sendJson(response, 400, { error: message });
   }
 });
@@ -148,12 +151,7 @@ async function loadWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
     liveBounties: live.items,
     liveStatus: live.status,
     liveMessage: live.message,
-    workspacePath: workspace,
-    storage: {
-      engine: "SQLite",
-      databasePath: getBoutDatabasePath(workspace),
-      artifactRoot: getBoutArtifactRoot(workspace),
-    },
+    storage: publicStorageDescriptor,
     stats,
   };
 }
@@ -218,7 +216,7 @@ async function loadLiveBounties(): Promise<{
     return {
       items: [],
       status: "unconfigured",
-      message: "Set SOLANA_PRIVATE_KEY on the local API process to load live Gibwork review bounties.",
+      message: "Connect a local wallet credential to load live Gibwork review bounties.",
     };
   }
 
@@ -249,10 +247,13 @@ async function loadLiveBounties(): Promise<{
       message: `${items.length} live code-review bounties loaded from Gibwork.`,
     };
   } catch (error) {
+    process.stderr.write(
+      `Gibwork discovery failed: ${error instanceof Error ? error.message : String(error)}\n`,
+    );
     return {
       items: [],
       status: "error",
-      message: error instanceof Error ? error.message : String(error),
+      message: "Bout could not reach Gibwork. Check the local server configuration and try again.",
     };
   }
 }
@@ -310,8 +311,7 @@ async function startServer(): Promise<void> {
 
   server.listen(port, "127.0.0.1", () => {
     process.stdout.write(`Bout API listening on http://127.0.0.1:${port}\n`);
-    process.stdout.write(`Workspace: ${workspace}\n`);
-    process.stdout.write(`Database: ${getBoutDatabasePath(workspace)}\n`);
+    process.stdout.write("Storage: local SQLite index + readable artifact bundles\n");
     process.stdout.write(`Indexed: ${reconciliation.imported} battle(s)\n`);
   });
 }

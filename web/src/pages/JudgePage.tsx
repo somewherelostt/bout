@@ -37,8 +37,8 @@ export function JudgePage({ snapshot }: { snapshot: WorkspaceSnapshot }) {
         <div className="honest-empty">
           <span><ServerOff size={24} /></span>
           <h2>{snapshot.liveStatus === "connected" ? "No live code-review bounties found." : "Connect the local API to Gibwork."}</h2>
-          <p>{snapshot.liveStatus === "connected" ? "The live query returned no tasks tagged Code Review." : "Set SOLANA_PRIVATE_KEY only on the local API process, then restart the workspace. The key is never sent to the browser."}</p>
-          <code>SOLANA_PRIVATE_KEY=… npm run dev:web</code>
+          <p>{snapshot.liveStatus === "connected" ? "The live query returned no code-review tasks." : "Connect a local wallet credential, then restart the workspace."}</p>
+          <small>Credentials stay with the local server and are never sent to the browser.</small>
         </div>
       ) : (
         <div className="judge-list">

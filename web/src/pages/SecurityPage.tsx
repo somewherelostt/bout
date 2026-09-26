@@ -28,13 +28,13 @@ export function SecurityPage({ snapshot }: { snapshot: WorkspaceSnapshot }) {
           <span className="eyebrow">LOCAL TRUST BOUNDARY</span>
           <h2>State remains under your workspace.</h2>
           <p>Bout uses a local SQLite index plus readable artifacts. There is no hosted database and no seeded browser cache.</p>
-          <code>{snapshot.workspacePath}</code>
+          <strong>{snapshot.storage.scope} · {snapshot.storage.persistence}</strong>
         </article>
         <article className="security-feature">
           <KeyRound size={22} />
           <span className="eyebrow">CREDENTIAL BOUNDARY</span>
           <h2>Secrets do not cross into the browser.</h2>
-          <p><code>SOLANA_PRIVATE_KEY</code> is consumed only by the local API process for live discovery. CLI publishing reads an explicit keypair file and does not persist its contents.</p>
+          <p>Wallet credentials are consumed only by the local server process. CLI publishing reads an explicit keypair file and never persists its contents.</p>
         </article>
       </div>
 

@@ -64,11 +64,10 @@ export interface WorkspaceSnapshot {
   liveBounties: LiveBounty[];
   liveStatus: "connected" | "unconfigured" | "error";
   liveMessage: string;
-  workspacePath: string;
   storage: {
     engine: "SQLite";
-    databasePath: string;
-    artifactRoot: string;
+    scope: "Current project";
+    persistence: "Local only";
   };
   stats: WorkspaceStats;
 }

@@ -20,16 +20,14 @@ export function VaultPage({ snapshot }: { snapshot: WorkspaceSnapshot }) {
           <div className="card-icon"><HardDrive size={20} /></div>
           <div>
             <span className="eyebrow">BOUT WORKSPACE</span>
-            <h2>Hybrid local storage</h2>
-            <p>SQLite indexes structured state while original patches and reports remain readable files.</p>
+            <h2>Your local workspace</h2>
+            <p>Bout keeps structured review state and readable artifacts together on this device.</p>
           </div>
-          <div className="actual-path"><code>{snapshot.workspacePath}</code></div>
           <div className="connection-row">
             <span className="connection-logo">DB</span>
-            <span><strong>{snapshot.storage.engine}</strong><small>{snapshot.stats.total} indexed battle bundles</small></span>
-            <span className="status-pill complete"><Check size={13} /> Connected</span>
+            <span><strong>{snapshot.storage.scope}</strong><small>{snapshot.stats.total} indexed battle bundles</small></span>
+            <span className="status-pill complete"><Check size={13} /> {snapshot.storage.persistence}</span>
           </div>
-          <div className="actual-path"><code>{snapshot.storage.databasePath}</code></div>
         </article>
 
         <article className="settings-card">
@@ -52,7 +50,7 @@ export function VaultPage({ snapshot }: { snapshot: WorkspaceSnapshot }) {
             <span><b>Published bounties</b><small>{snapshot.stats.published}</small></span>
             <span><b>Saved verdicts</b><small>{snapshot.stats.reviewed}</small></span>
           </div>
-          <p>Artifact root: <code>{snapshot.storage.artifactRoot}</code></p>
+          <p>Backed by {snapshot.storage.engine}; implementation paths stay hidden from the browser.</p>
         </article>
       </div>
 

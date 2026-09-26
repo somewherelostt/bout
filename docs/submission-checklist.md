@@ -26,5 +26,5 @@
 - [x] Hackathon role received.
 - [ ] Attend and record attendance for two Discord hackathon sessions.
 - [ ] Confirm any strict requirements announced verbally during the first session.
-- [ ] Make the GitHub repository public only after the final secret scan.
+- [x] Make the GitHub repository public only after the final secret scan.
 - [ ] Submit the repository, video, screenshots, setup instructions, and exported deliverables before the bounty deadline.

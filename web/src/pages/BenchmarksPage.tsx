@@ -77,7 +77,7 @@ export function BenchmarksPage({ snapshot }: { snapshot: WorkspaceSnapshot }) {
         <div className="definition-table">
           <div><strong>Bundle count</strong><span>Readable local manifests. It does not establish that patches compile or tests pass.</span></div>
           <div><strong>Prepared pool</strong><span>Sum of declared draft amounts. It is not a wallet balance, deposit, or payout receipt.</span></div>
-          <div><strong>Valid verdict</strong><span>A verdict matching the current or migrated schema. It is not independent consensus.</span></div>
+          <div><strong>Valid verdict</strong><span>A verdict matching the current schema. It is not independent consensus.</span></div>
           <div><strong>Outcome share</strong><span>Observed local decisions only. No ranking is inferred from small or empty samples.</span></div>
         </div>
       </section>

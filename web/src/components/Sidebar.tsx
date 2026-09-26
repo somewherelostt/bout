@@ -1,6 +1,6 @@
 import {
-  ArrowUpRight,
-  Clock3,
+  ChartNoAxesColumnIncreasing,
+  Gavel,
   History,
   KeyRound,
   LockKeyhole,
@@ -9,9 +9,8 @@ import {
   Plus,
   Trophy,
   X,
-  ChartNoAxesColumnIncreasing,
 } from "lucide-react";
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import type { BoutRecord } from "../types";
 import { Brand } from "./Brand";
 
@@ -22,13 +21,9 @@ interface SidebarProps {
   onClose: () => void;
 }
 
-const statusClass = (status: BoutRecord["status"]) =>
-  status.toLowerCase().replace(" ", "-");
-
 export function Sidebar({ activity, open, onOpen, onClose }: SidebarProps) {
   const navigate = useNavigate();
-  const location = useLocation();
-  const judgeActive = location.pathname.startsWith("/judge");
+  const latest = activity[0];
 
   const go = (path: string) => {
     navigate(path);
@@ -37,134 +32,51 @@ export function Sidebar({ activity, open, onOpen, onClose }: SidebarProps) {
 
   return (
     <>
-      <button
-        className="mobile-menu"
-        type="button"
-        aria-label={open ? "Close navigation" : "Open navigation"}
-        onClick={open ? onClose : onOpen}
-      >
-        {open ? <X size={19} /> : <Menu size={19} />}
-      </button>
-
       {open && <button className="sidebar-scrim" onClick={onClose} aria-label="Close navigation" />}
 
-      <aside className={`sidebar ${open ? "sidebar-open" : ""}`}>
-        <div className="sidebar-head">
-          <NavLink to="/" onClick={onClose}>
-            <Brand />
-          </NavLink>
-          <span className="sidebar-kicker">Blind review<br />brighter code</span>
-        </div>
-
-        <button className="new-bout-button" type="button" onClick={() => go("/")}>
-          <Plus size={20} strokeWidth={1.8} />
-          <span>New bout</span>
-          <kbd>⌘ N</kbd>
-        </button>
-
-        <nav className="sidebar-nav" aria-label="Primary navigation">
-          <NavLink to="/history" onClick={onClose}>
-            <History size={19} strokeWidth={1.7} />
-            History
-          </NavLink>
-          <NavLink to="/vault" onClick={onClose}>
-            <KeyRound size={19} strokeWidth={1.7} />
-            Vault
-          </NavLink>
-        </nav>
-
-        <div className="mode-switch" aria-label="Workspace mode">
+      <header className={`sidebar system-header ${open ? "sidebar-open" : ""}`}>
+        <div className="sidebar-head system-titlebar">
+          <NavLink to="/" onClick={onClose}><Brand /></NavLink>
+          <span className="system-caption">Bout review workbench</span>
+          <span className="system-session">LOCAL / PRIVATE</span>
+          <span className="window-controls" aria-hidden="true"><i /><i /><i /></span>
           <button
-            className={!judgeActive ? "active" : ""}
+            className="mobile-menu"
             type="button"
-            onClick={() => go("/history")}
+            aria-label={open ? "Close navigation" : "Open navigation"}
+            onClick={open ? onClose : onOpen}
           >
-            Mine
-          </button>
-          <button
-            className={judgeActive ? "active" : ""}
-            type="button"
-            onClick={() => go("/judge")}
-          >
-            Judge
+            {open ? <X size={18} /> : <Menu size={18} />}
           </button>
         </div>
 
-        <section className="sidebar-activity" aria-labelledby="recent-bouts-title">
-          <div className="section-label-row">
-            <span id="recent-bouts-title">Recent bouts</span>
-            <button type="button" onClick={() => go(judgeActive ? "/judge" : "/history")}>
-              View all <ArrowUpRight size={13} />
-            </button>
-          </div>
+        <div className="system-toolbar">
+          <button className="new-bout-button" type="button" onClick={() => go("/")}>
+            <Plus size={17} strokeWidth={1.8} />
+            <span>New bout</span>
+            <kbd>⌘N</kbd>
+          </button>
 
-          <div className="activity-list">
-            {activity.slice(0, 5).map((item) => (
-              <button
-                type="button"
-                className="activity-item"
-                key={item.id}
-                onClick={() => go(`/battle/${item.id}`)}
-              >
-                <span className="activity-copy">
-                  <strong>{item.title}</strong>
-                  <small>{item.repo} · {formatRelative(item.createdAt)}</small>
-                </span>
-                <span className="activity-meta">
-                  <b>${item.reward}</b>
-                  <small>
-                    <i className={`status-dot ${statusClass(item.status)}`} />
-                    {item.status}
-                  </small>
-                </span>
-              </button>
-            ))}
-            {activity.length === 0 && <p className="sidebar-empty">No local bouts yet.</p>}
-          </div>
-        </section>
-
-        <div className="sidebar-bottom">
-          <nav className="sidebar-nav secondary" aria-label="Reports navigation">
-            <NavLink to="/benchmarks" onClick={onClose}>
-              <ChartNoAxesColumnIncreasing size={19} strokeWidth={1.7} />
-              Evidence
-            </NavLink>
-            <NavLink to="/method" onClick={onClose}>
-              <Microscope size={19} strokeWidth={1.7} />
-              Method
-            </NavLink>
-            <NavLink to="/awards" onClick={onClose}>
-              <Trophy size={19} strokeWidth={1.7} />
-              Awards
-            </NavLink>
+          <nav className="sidebar-nav" aria-label="Primary navigation">
+            <NavLink to="/history" onClick={onClose}><History size={16} />History</NavLink>
+            <NavLink to="/judge" onClick={onClose}><Gavel size={16} />Judge</NavLink>
+            <NavLink to="/benchmarks" onClick={onClose}><ChartNoAxesColumnIncreasing size={16} />Evidence</NavLink>
+            <NavLink to="/method" onClick={onClose}><Microscope size={16} />Method</NavLink>
+            <NavLink to="/awards" onClick={onClose}><Trophy size={16} />Awards</NavLink>
+            <NavLink to="/vault" onClick={onClose}><KeyRound size={16} />Vault</NavLink>
           </nav>
 
-          <button className="profile-row" type="button" onClick={() => go("/security")}>
-            <span className="avatar"><LockKeyhole size={16} /></span>
-            <span>
-              <strong>Security boundary</strong>
-              <small>Local keys · explicit publishing</small>
-            </span>
-            <ArrowUpRight size={15} />
-          </button>
-
-          <div className="sidebar-legal">
-            <span>Built with Gibwork</span>
-            <NavLink to="/security" onClick={onClose}>Security</NavLink>
+          <div className="toolbar-spacer" />
+          <div className="workspace-pulse" title={latest ? `Latest: ${latest.title}` : "No local bouts yet"}>
+            <i className={latest ? `status-dot ${latest.status.toLowerCase()}` : "status-dot"} />
+            <span><strong>{activity.length}</strong> local bout{activity.length === 1 ? "" : "s"}</span>
           </div>
+          <button className="profile-row" type="button" onClick={() => go("/security")}>
+            <LockKeyhole size={15} />
+            <span><strong>Security</strong><small>keys stay local</small></span>
+          </button>
         </div>
-      </aside>
+      </header>
     </>
   );
-}
-
-function formatRelative(value: string): string {
-  const delta = Date.now() - new Date(value).getTime();
-  if (!Number.isFinite(delta) || delta < 0) return "just now";
-  const minutes = Math.floor(delta / 60_000);
-  if (minutes < 1) return "just now";
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.floor(hours / 24)}d ago`;
 }

@@ -1,4 +1,4 @@
-import { AlertTriangle, LoaderCircle, RefreshCw } from "lucide-react";
+import { AlertTriangle, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { createBout, loadWorkspace } from "./api";
@@ -51,9 +51,14 @@ export function App() {
   if (!snapshot && !error) {
     return (
       <div className="boot-state">
-        <LoaderCircle className="spin" size={22} />
-        <strong>Opening your Bout workspace…</strong>
-        <span>Reading local battle bundles and live connection status.</span>
+        <div className="boot-window">
+          <div className="window-titlebar"><span>BOUT.EXE</span><span className="window-controls" aria-hidden="true"><i /><i /><i /></span></div>
+          <div className="boot-body">
+            <strong>Opening your Bout workspace…</strong>
+            <span>Reading local battle bundles and live connection status.</span>
+            <div className="boot-progress" aria-label="Loading"><i /></div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -61,12 +66,15 @@ export function App() {
   if (!snapshot) {
     return (
       <div className="boot-state error-state">
-        <AlertTriangle size={24} />
-        <strong>The local Bout API is unavailable.</strong>
-        <span>{error}</span>
-        <button className="primary-button" type="button" onClick={() => void refresh()}>
-          <RefreshCw size={16} /> Retry
-        </button>
+        <div className="boot-window">
+          <div className="window-titlebar"><span>BOUT.EXE / CONNECTION ERROR</span><span className="window-controls" aria-hidden="true"><i /><i /><i /></span></div>
+          <div className="boot-body">
+            <AlertTriangle size={24} />
+            <strong>The local Bout API is unavailable.</strong>
+            <span>{error}</span>
+            <button className="primary-button" type="button" onClick={() => void refresh()}><RefreshCw size={16} /> Retry</button>
+          </div>
+        </div>
       </div>
     );
   }

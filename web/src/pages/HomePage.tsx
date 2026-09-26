@@ -60,12 +60,18 @@ export function HomePage({ onCreate }: HomePageProps) {
       <div className="corner-note middle-right">PEOPLE REVIEW<br />PROGRESS WINS</div>
 
       <div className="hero-copy">
-        <span className="eyebrow">PAID BLIND CODE REVIEW</span>
-        <h1>Put two patches in the ring.<br />Pay for the better answer.</h1>
-        <p>Create a real local battle bundle and prepared Gibwork bounty.<br />Nothing is published or funded from this screen.</p>
+        <div className="hero-system-line"><span>BOUT://NEW_REVIEW</span><i />LOCAL WORKSPACE</div>
+        <span className="eyebrow">Paid blind code review</span>
+        <h1>Two patches enter.<br /><em>Evidence decides.</em></h1>
+        <p>Package two real changes against one task, hide their authors, and prepare a paid review without moving funds.</p>
       </div>
 
       <form className="composer-card" onSubmit={(event) => void submit(event)}>
+        <div className="window-titlebar composer-titlebar">
+          <span><FileCode2 size={14} /> NEW_BOUT.BOUT</span>
+          <span className="window-controls" aria-hidden="true"><i /><i /><i /></span>
+        </div>
+        <div className="composer-body">
         <div className="field-heading">
           <label htmlFor="task-prompt">Task and acceptance criteria</label>
           <span>Saved to task.md</span>
@@ -134,6 +140,7 @@ export function HomePage({ onCreate }: HomePageProps) {
             {submitting ? <><LoaderCircle className="spin" size={17} /> Creating…</> : <>Create real bout <ArrowRight size={17} /></>}
           </button>
         </div>
+        </div>
       </form>
 
       <div className="real-flow-strip">
@@ -142,7 +149,7 @@ export function HomePage({ onCreate }: HomePageProps) {
         <span><b>03</b><ShieldCheck size={14} /> Save a local Gibwork draft</span>
       </div>
 
-      <div className="arena-caption"><SlidersHorizontal size={13} /> REAL PATCHES COMPETE HERE</div>
+      <div className="arena-caption"><SlidersHorizontal size={13} /> REVIEW WORKBENCH / ARTIFACTS STAY LOCAL</div>
     </section>
   );
 }

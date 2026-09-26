@@ -1,12 +1,34 @@
-<div align="center">
+<p align="center">
+  <img src="web/public/bout-cover.png" alt="Bout turns two anonymous code patches into an evidence-backed verdict" width="100%" />
+</p>
 
-# Bout
+<h1 align="center">Bout</h1>
 
-### Paid blind review for competing code patches, powered by Gibwork.
+<p align="center"><strong>Paid blind review for competing code patches, powered by Gibwork.</strong></p>
 
-Turn two candidate patches into one evidence-backed human verdict—without revealing who produced either candidate.
+<p align="center">
+  Turn two candidate patches into one evidence-backed human verdict—without revealing who produced either candidate.
+</p>
 
-</div>
+<p align="center">
+  <a href="https://bout-omega.vercel.app"><strong>Open the showcase</strong></a>
+  &nbsp;·&nbsp;
+  <a href="#quick-start"><strong>Run the CLI</strong></a>
+  &nbsp;·&nbsp;
+  <a href="docs/architecture.md"><strong>Read the architecture</strong></a>
+</p>
+
+<p align="center">
+  <img src="web/public/avatars/patch-a.svg" alt="Anonymous candidate A" width="54" height="54" />
+  &nbsp;
+  <img src="web/public/avatars/patch-b.svg" alt="Anonymous candidate B" width="54" height="54" />
+  &nbsp;
+  <img src="web/public/avatars/reviewer.svg" alt="Independent reviewer" width="54" height="54" />
+  &nbsp;
+  <img src="web/public/avatars/verdict.svg" alt="Evidence-backed verdict" width="54" height="54" />
+</p>
+
+<p align="center"><sub>candidate A · candidate B · human reviewer · final verdict</sub></p>
 
 ---
 
@@ -15,6 +37,8 @@ Bout is a terminal-first evaluation workflow for code changes. It packages two p
 No dashboard is required. Every task, patch, decision, and receipt remains inspectable as a local file. A local SQLite database indexes structured workflow state for reliable queries and metrics without moving source material into hosted storage. An optional local web workspace is included for demonstrating the same workflow visually; the CLI remains the core product and Gibwork integration.
 
 Hosted showcase: [bout-omega.vercel.app](https://bout-omega.vercel.app). The deployment is intentionally read-only and contains no seeded records, wallet credentials, or persistent review state; real workflows run through the local CLI.
+
+![Bout local review workbench](docs/screenshots/showcase-home.png)
 
 ## Why Bout
 
@@ -310,6 +334,7 @@ npm run check
 
 - [Architecture and trust boundaries](docs/architecture.md)
 - [Five-minute demo runbook](docs/demo-script.md)
+- [Paste-ready Gibwork submission package](docs/gibwork-submission.md)
 - [Hackathon submission checklist](docs/submission-checklist.md)
 - [Security policy](SECURITY.md)
 

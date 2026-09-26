@@ -402,6 +402,75 @@ h3 {
   gap: 18px 52px;
 }
 
+.project-cover {
+  position: relative;
+  grid-column: 1 / -1;
+  height: clamp(210px, 24vw, 330px);
+  margin: 0 0 22px;
+  overflow: hidden;
+  background: #f4f0e5;
+  border: 3px solid var(--chrome);
+  box-shadow:
+    inset 1px 1px 0 white,
+    inset -1px -1px 0 #666a66,
+    0 28px 70px rgba(4, 17, 18, 0.28);
+}
+
+.project-cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(9, 26, 27, 0.78) 0%, rgba(9, 26, 27, 0.34) 38%, transparent 72%);
+  pointer-events: none;
+}
+
+.project-cover > img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center;
+}
+
+.project-cover figcaption {
+  position: absolute;
+  z-index: 1;
+  inset: auto auto 26px 28px;
+  max-width: min(520px, calc(100% - 56px));
+  display: grid;
+  gap: 10px;
+  color: white;
+}
+
+.cover-kicker {
+  font: 9px "IBM Plex Mono", monospace;
+  letter-spacing: 0.13em;
+}
+
+.project-cover figcaption > strong {
+  max-width: 470px;
+  font-size: clamp(22px, 3vw, 42px);
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+}
+
+.cover-cast {
+  display: flex;
+  align-items: center;
+}
+
+.cover-cast img {
+  width: 34px;
+  height: 34px;
+  margin-right: -7px;
+  object-fit: cover;
+  background: #f8f7f1;
+  border: 2px solid #f8f7f1;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(4, 17, 18, 0.2);
+}
+
 .corner-note {
   display: none;
 }
@@ -639,6 +708,16 @@ h3 {
   font: 8px "IBM Plex Mono", monospace;
 }
 
+.flow-avatar {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  object-fit: cover;
+  border: 1px solid #8e918c;
+  border-radius: 4px;
+  box-shadow: 1px 1px 0 white;
+}
+
 .real-flow-strip span:last-child {
   border-right: 0;
 }
@@ -649,7 +728,6 @@ h3 {
 
 .arena-caption {
   grid-column: 1;
-  grid-row: 2;
   align-self: end;
   margin: 0;
   color: rgba(255, 255, 255, 0.45);
@@ -1229,6 +1307,11 @@ h3 {
     padding: 44px 0 82px;
   }
 
+  .project-cover {
+    height: clamp(200px, 45vw, 300px);
+    margin-bottom: 4px;
+  }
+
   .hero-copy h1 {
     font-size: clamp(48px, 12vw, 72px);
   }
@@ -1269,6 +1352,23 @@ h3 {
   .home-page {
     width: calc(100% - 18px);
     padding-top: 34px;
+  }
+
+  .project-cover {
+    height: 230px;
+  }
+
+  .project-cover::after {
+    background: linear-gradient(0deg, rgba(9, 26, 27, 0.88), rgba(9, 26, 27, 0.08) 80%);
+  }
+
+  .project-cover figcaption {
+    inset: auto 18px 18px;
+    max-width: none;
+  }
+
+  .project-cover figcaption > strong {
+    font-size: 25px;
   }
 
   .hero-copy h1 {

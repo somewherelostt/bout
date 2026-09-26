@@ -60,6 +60,20 @@ export function HomePage({ onCreate, hostedReadOnly = false }: HomePageProps) {
       <div className="corner-note middle-left">REAL INPUTS<br />TRACEABLE OUTPUTS</div>
       <div className="corner-note middle-right">PEOPLE REVIEW<br />PROGRESS WINS</div>
 
+      <figure className="project-cover">
+        <img src="/bout-cover.png" alt="Two anonymous code patches converging on an evidence-backed verdict" />
+        <figcaption>
+          <span className="cover-kicker">BOUT / HUMAN REVIEW PROTOCOL</span>
+          <strong>Blind patches. Paid judgment. Traceable evidence.</strong>
+          <div className="cover-cast" aria-label="Patch and reviewer roles">
+            <img src="/avatars/patch-a.svg" alt="Candidate A avatar" />
+            <img src="/avatars/patch-b.svg" alt="Candidate B avatar" />
+            <img src="/avatars/reviewer.svg" alt="Reviewer avatar" />
+            <img src="/avatars/verdict.svg" alt="Verdict avatar" />
+          </div>
+        </figcaption>
+      </figure>
+
       <div className="hero-copy">
         <div className="hero-system-line"><span>BOUT://NEW_REVIEW</span><i />LOCAL WORKSPACE</div>
         <span className="eyebrow">Paid blind code review</span>
@@ -151,9 +165,9 @@ export function HomePage({ onCreate, hostedReadOnly = false }: HomePageProps) {
       </form>
 
       <div className="real-flow-strip">
-        <span><b>01</b><Check size={14} /> Hash both patch files</span>
-        <span><b>02</b><FileCode2 size={14} /> Randomize A/B identity</span>
-        <span><b>03</b><ShieldCheck size={14} /> Save a local Gibwork draft</span>
+        <span><img className="flow-avatar" src="/avatars/patch-a.svg" alt="" /><b>01</b><Check size={14} /> Hash both patch files</span>
+        <span><img className="flow-avatar" src="/avatars/reviewer.svg" alt="" /><b>02</b><FileCode2 size={14} /> Randomize A/B identity</span>
+        <span><img className="flow-avatar" src="/avatars/verdict.svg" alt="" /><b>03</b><ShieldCheck size={14} /> Save a local Gibwork draft</span>
       </div>
 
       <div className="arena-caption"><SlidersHorizontal size={13} /> REVIEW WORKBENCH / ARTIFACTS STAY LOCAL</div>

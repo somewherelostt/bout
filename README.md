@@ -1,66 +1,215 @@
+<div align="center">
+
 # Bout
 
-**Paid blind review for competing code patches, powered by Gibwork.**
+### Paid blind review for competing code patches, powered by Gibwork.
 
-Bout is a terminal-first workflow for comparing two code patches under the same task and test conditions, then collecting a structured human judgment.
+Turn two candidate patches into one evidence-backed human verdict—without revealing who produced either candidate.
 
-The project is intentionally CLI-first. It produces inspectable files instead of requiring a dashboard, keeps candidate identities hidden during review, and records hashes for every input used in a decision.
+</div>
 
-## Status
+---
 
-Early implementation. The first milestone covers local battle creation, deterministic evidence capture, reviewer workflow integration, and report export.
+Bout is a terminal-first evaluation workflow for code changes. It packages two patches against the same task, randomizes their reviewer-facing identities, records tamper-evident hashes, and prepares a paid review bounty with a strict response contract.
 
-## Requirements
+No dashboard is required. Every task, patch, decision, and receipt remains inspectable as a local file.
+
+## Why Bout
+
+Automated tests answer whether known expectations pass. They do not reliably determine which implementation is safer, clearer, or more maintainable when both candidates appear correct.
+
+Bout adds a structured human judgment layer:
+
+```text
+one task + two patches
+          │
+          ▼
+  anonymous candidates
+       A       B
+        \     /
+         human review
+              │
+              ▼
+      evidence-backed verdict
+```
+
+The same task and verification command apply to both candidates. Original source identities stay private while reviewers receive normalized filenames, hashes, and an identical evaluation rubric.
+
+## What works today
+
+| Capability | Status |
+| --- | --- |
+| Environment diagnostics | Ready |
+| Atomic battle creation | Ready |
+| Randomized A/B assignment | Ready |
+| SHA-256 evidence manifests | Ready |
+| Private identity mapping | Ready |
+| Offline bounty preview | Ready |
+| Guarded stage publishing | Ready |
+| Submission retrieval and verdict aggregation | Next |
+| Final Markdown and JSON reports | Next |
+
+## Quick start
+
+### Requirements
 
 - Node.js 22.12 or newer
 - Git
 
-## Development
+### Install
 
 ```bash
 npm install
-npm run dev -- doctor
-npm run check
+npm run build
+npm link
+bout doctor
 ```
 
-## Create a local review battle
+Expected result:
 
-Prepare a Markdown task and two patch files, then run:
+```text
+PASS  Node.js  v22+
+PASS  Git      git version ...
+```
+
+## Run a blind battle
+
+Prepare three files:
+
+```text
+task.md
+candidate-one.patch
+candidate-two.patch
+```
+
+`task.md` should define the problem, constraints, acceptance criteria, and the expected verification command. Candidate files should be standard Git patches without author or model identifiers.
+
+Create the battle:
 
 ```bash
-npm run dev -- battle create \
+bout battle create \
   --task ./task.md \
   --candidate-one ./candidate-one.patch \
   --candidate-two ./candidate-two.patch \
   --verify "npm test"
 ```
 
-The command creates `.bout/battles/<id>/review`, which contains only anonymous reviewer material. The source-to-label mapping is kept under the battle's separate `private` directory.
+Bout returns a battle UUID and creates an isolated local record:
 
-## Prepare a reviewer bounty
-
-Generate the exact public payload locally before authorizing any financial action:
-
-```bash
-npm run dev -- bounty prepare <battle-id> --pool 1.00 --min-payout 1.00
+```text
+.bout/battles/<battle-id>/
+├── review/
+│   ├── task.md
+│   ├── candidate-a.patch
+│   ├── candidate-b.patch
+│   └── manifest.json
+└── private/
+    └── identity-map.json
 ```
 
-Preparation does not access a wallet or spend funds. It writes `bounty-draft.json` into the battle's review directory for inspection.
+Only the `review` directory belongs in reviewer-facing material. The `private` directory contains the source-to-label mapping and must remain local.
 
-Publishing is deliberately separate and only supports the stage environment. Stage uses real mainnet USDC. The command requires a local keypair path and an explicit confirmation phrase:
+## Prepare the paid review
+
+Generate the complete bounty payload locally:
 
 ```bash
-npm run dev -- bounty publish <battle-id> \
+bout bounty prepare <battle-id> \
+  --pool 1.00 \
+  --min-payout 1.00
+```
+
+This command:
+
+- reads only the anonymous review bundle;
+- validates the pool and minimum payout;
+- embeds the task, both patches, hashes, and review rubric;
+- writes `review/bounty-draft.json` for inspection;
+- performs no network request and spends no funds.
+
+Review the generated draft before publishing it.
+
+## Publish to stage
+
+> [!WARNING]
+> The stage environment uses real mainnet USDC. Use a dedicated low-balance wallet and review every amount before continuing.
+
+Publishing is a separate, explicitly gated action:
+
+```bash
+bout bounty publish <battle-id> \
   --keypair /absolute/path/to/keypair.json \
   --confirm-real-funds "I UNDERSTAND STAGE USES REAL USDC"
 ```
 
-Never commit a keypair, seed phrase, private key, or populated environment file.
+Bout refuses to publish unless the confirmation phrase matches exactly. Wallet material is read from the supplied file, used locally for signing, and never written into battle state or command output.
 
-## Principles
+## Reviewer contract
 
-- The same task and verification command apply to both candidates.
-- Candidate identity is separated from the reviewer-facing bundle.
+Every reviewer is asked to return a structured decision:
+
+```text
+WINNER: A | B | TIE | BOTH_FAILED
+CONFIDENCE: 1-5
+
+CORRECTNESS:
+...
+
+SECURITY:
+...
+
+MAINTAINABILITY:
+...
+
+EVIDENCE:
+- cite concrete files, lines, tests, or behavior
+
+RATIONALE:
+...
+```
+
+Responses without concrete evidence can be rejected or returned for clarification.
+
+## Trust model
+
+Bout is designed around explicit boundaries:
+
+- Candidate inputs with identical hashes are rejected.
+- A/B assignment is randomized for every battle.
+- Reviewer filenames never reveal source identities.
+- Public drafts are generated exclusively from the anonymous review bundle.
+- Draft preparation never loads wallet credentials.
+- Publishing currently supports stage only.
 - Financial actions require explicit confirmation.
-- Secrets and private repository contents are never published implicitly.
-- Every decision remains auditable through local artifacts and content hashes.
+- Wallet secrets are never persisted or logged.
+
+Do not place proprietary code, credentials, personal information, internal hostnames, or secret-bearing logs in reviewer-facing files.
+
+## Command reference
+
+```text
+bout doctor
+bout battle create [options]
+bout bounty prepare <battle-id> [options]
+bout bounty publish <battle-id> [options]
+```
+
+Run `bout <command> --help` for complete options.
+
+## Development
+
+```bash
+npm install
+npm run check
+```
+
+`npm run check` compiles the TypeScript project and runs the complete test suite. Remote verification also rejects high- or critical-severity dependency advisories.
+
+## Documentation
+
+- [Architecture and trust boundaries](docs/architecture.md)
+- [Security policy](SECURITY.md)
+
+## License
+
+[MIT](LICENSE)

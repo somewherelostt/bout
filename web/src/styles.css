@@ -73,6 +73,63 @@ a {
   grid-template-columns: 300px minmax(0, 1fr);
 }
 
+.boot-state {
+  min-height: 100vh;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 9px;
+  color: var(--muted);
+  background:
+    radial-gradient(circle at 20% 80%, rgba(164, 207, 255, 0.42), transparent 32%),
+    radial-gradient(circle at 85% 15%, rgba(255, 181, 157, 0.38), transparent 31%),
+    var(--paper);
+  text-align: center;
+}
+
+.boot-state strong {
+  color: var(--ink);
+  font-size: 16px;
+}
+
+.boot-state span {
+  max-width: 440px;
+  font-size: 12px;
+}
+
+.boot-state .primary-button {
+  margin-top: 10px;
+}
+
+.error-state > svg {
+  color: var(--accent);
+}
+
+.spin {
+  animation: spin 900ms linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.sync-warning {
+  position: fixed;
+  z-index: 40;
+  top: 14px;
+  right: 18px;
+  max-width: 420px;
+  padding: 9px 12px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #8a3024;
+  background: #fff0ec;
+  border: 1px solid rgba(138, 48, 36, 0.2);
+  border-radius: 7px;
+  font-size: 10px;
+}
+
 .sidebar {
   position: sticky;
   top: 0;
@@ -315,6 +372,21 @@ a {
 
 .status-dot.draft {
   background: var(--accent);
+}
+
+.status-dot.prepared {
+  background: #d09112;
+}
+
+.status-dot.published {
+  background: #346dd8;
+}
+
+.sidebar-empty {
+  margin: 8px 6px;
+  color: var(--quiet);
+  font-size: 11px;
+  line-height: 1.5;
 }
 
 .sidebar-bottom {
@@ -661,6 +733,59 @@ a {
   background: white;
 }
 
+.patch-file-control {
+  cursor: pointer;
+}
+
+.file-drop {
+  position: relative;
+  min-height: 62px;
+  padding: 10px 12px;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px dashed var(--line-strong);
+  border-radius: 7px;
+}
+
+.file-drop > span {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.file-drop strong {
+  overflow: hidden;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-drop small {
+  color: var(--quiet);
+  font-size: 9px;
+}
+
+.file-drop input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.form-error {
+  margin-top: 14px;
+  padding: 10px 12px;
+  color: #963828;
+  background: #fff0ec;
+  border: 1px solid rgba(150, 56, 40, 0.18);
+  border-radius: 7px;
+  font-size: 11px;
+}
+
 .composer-footer {
   margin-top: 22px;
   padding-top: 18px;
@@ -750,6 +875,33 @@ a {
   width: min(890px, calc(100% - 40px));
   margin-top: 23px;
   text-align: center;
+}
+
+.real-flow-strip {
+  width: min(850px, calc(100% - 80px));
+  margin-top: 18px;
+  padding: 11px 14px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.52);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  backdrop-filter: blur(12px);
+}
+
+.real-flow-strip span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-size: 9.5px;
+}
+
+.real-flow-strip b {
+  color: var(--quiet);
+  font: 8px ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 .suggestion-grid {
@@ -1027,6 +1179,16 @@ button.table-row:hover {
   background: #ffe5df;
 }
 
+.status-pill.prepared {
+  color: #8b5b00;
+  background: #fff1ca;
+}
+
+.status-pill.published {
+  color: #2457b6;
+  background: #e2ecff;
+}
+
 .money {
   color: var(--ink);
   font-weight: 720;
@@ -1049,6 +1211,81 @@ button.table-row:hover {
 
 .judge-toolbar .select-control {
   min-width: 150px;
+}
+
+.source-status {
+  margin: 28px 0 10px;
+  padding: 11px 14px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.58);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 10px;
+}
+
+.source-status strong {
+  margin-right: 7px;
+  color: var(--ink);
+}
+
+.source-status.error,
+.source-status.unconfigured {
+  color: #85544c;
+  background: rgba(255, 239, 234, 0.68);
+}
+
+.honest-empty {
+  min-height: 330px;
+  padding: 40px;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 10px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.56);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  backdrop-filter: blur(14px);
+}
+
+.honest-empty > span {
+  width: 50px;
+  height: 50px;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  background: rgba(17, 18, 15, 0.06);
+  border-radius: 50%;
+}
+
+.honest-empty h2 {
+  margin: 8px 0 0;
+  font-size: 20px;
+  letter-spacing: -0.035em;
+}
+
+.honest-empty p {
+  max-width: 530px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.honest-empty code,
+.actual-path code,
+.record-id {
+  font: 9px ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.honest-empty code {
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: rgba(17, 18, 15, 0.055);
+  border-radius: 5px;
 }
 
 .judge-list {
@@ -1215,6 +1452,14 @@ button.table-row:hover {
   text-align: center;
 }
 
+.judge-card.live-card {
+  min-height: 138px;
+}
+
+.record-id {
+  color: var(--quiet);
+}
+
 .vault-grid {
   margin-top: 32px;
   display: grid;
@@ -1307,6 +1552,26 @@ button.table-row:hover {
   background: rgba(17, 18, 15, 0.045);
   border: 1px solid var(--line);
   border-radius: 7px;
+}
+
+.actual-path {
+  margin: 24px 0 0;
+  padding: 12px;
+  overflow: auto;
+  color: #4d5661;
+  background: rgba(17, 18, 15, 0.045);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+}
+
+.connection-state {
+  margin-top: 20px;
+  padding-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-top: 1px solid var(--line);
+  font-size: 11px;
 }
 
 .token-field code {
@@ -2028,7 +2293,8 @@ button.table-row:hover {
   }
 
   .composer-card,
-  .samples-block {
+  .samples-block,
+  .real-flow-strip {
     width: 100%;
   }
 
@@ -2039,11 +2305,16 @@ button.table-row:hover {
   .composer-grid.two-up,
   .composer-grid.three-up,
   .suggestion-grid,
+  .real-flow-strip,
   .vault-grid,
   .metric-grid,
   .award-grid,
   .patch-grid {
     grid-template-columns: 1fr;
+  }
+
+  .real-flow-strip span {
+    justify-content: flex-start;
   }
 
   .suggestion-grid > button:nth-child(n + 3) {

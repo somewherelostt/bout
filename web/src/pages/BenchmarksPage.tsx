@@ -1,69 +1,71 @@
-import { ArrowDownToLine, ArrowUpRight, BarChart3, ShieldCheck, UsersRound } from "lucide-react";
-import { benchmarkRows } from "../data/mock";
+import { ArrowDownToLine, BarChart3, CircleDollarSign, FileCheck2 } from "lucide-react";
+import type { WorkspaceSnapshot } from "../types";
 
-export function BenchmarksPage() {
+export function BenchmarksPage({ snapshot }: { snapshot: WorkspaceSnapshot }) {
+  const { stats } = snapshot;
+  const percent = (value: number) => stats.total === 0 ? 0 : Math.round((value / stats.total) * 100);
+  const stages = [
+    { label: "Prepared bounty drafts", value: stats.prepared, percent: percent(stats.prepared) },
+    { label: "Published through Gibwork", value: stats.published, percent: percent(stats.published) },
+    { label: "Verdicts recorded", value: stats.reviewed, percent: percent(stats.reviewed) },
+  ];
+
+  const exportSnapshot = () => {
+    const blob = new Blob([`${JSON.stringify(snapshot, null, 2)}\n`], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "bout-workspace-snapshot.json";
+    anchor.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <section className="interior-page">
       <header className="page-header">
         <div>
-          <span className="eyebrow">PUBLISHED EVIDENCE</span>
+          <span className="eyebrow">MEASURED FROM LOCAL ARTIFACTS</span>
           <h1>Benchmarks</h1>
-          <p>How blind comparison changes code-review confidence across real engineering work.</p>
+          <p>Counts and conversion rates are calculated from the battle bundles currently on disk.</p>
         </div>
-        <button className="secondary-button" type="button"><ArrowDownToLine size={16} /> Export snapshot</button>
+        <button className="secondary-button" type="button" onClick={exportSnapshot}><ArrowDownToLine size={16} /> Export real snapshot</button>
       </header>
 
       <div className="metric-grid">
-        <article className="metric-card">
-          <span><BarChart3 size={18} /> Bouts measured</span>
-          <strong>701</strong>
-          <small>+92 this month</small>
-        </article>
-        <article className="metric-card">
-          <span><UsersRound size={18} /> Independent reviews</span>
-          <strong>2,486</strong>
-          <small>3.5 per bout</small>
-        </article>
-        <article className="metric-card">
-          <span><ShieldCheck size={18} /> Reviewer agreement</span>
-          <strong>87.4%</strong>
-          <small>+5.8% vs single review</small>
-        </article>
+        <article className="metric-card"><span><BarChart3 size={18} /> Battle bundles</span><strong>{stats.total}</strong><small>read from .bout/battles</small></article>
+        <article className="metric-card"><span><FileCheck2 size={18} /> Saved verdicts</span><strong>{stats.reviewed}</strong><small>{percent(stats.reviewed)}% of all battles</small></article>
+        <article className="metric-card"><span><CircleDollarSign size={18} /> Prepared pool</span><strong>${formatAmount(stats.totalPool)}</strong><small>USDC declared in local drafts</small></article>
       </div>
 
       <article className="benchmark-panel">
         <div className="panel-heading">
-          <div>
-            <span className="eyebrow">REVIEW SIGNAL</span>
-            <h2>Where blind review helps most</h2>
-          </div>
-          <span className="dataset-note">Snapshot · Sep 2026</span>
+          <div><span className="eyebrow">WORKFLOW CONVERSION</span><h2>Actual workspace progress</h2></div>
+          <span className="dataset-note">LIVE LOCAL STATE</span>
         </div>
-        <div className="benchmark-chart" aria-label="Review confidence chart">
-          {[92, 89, 88, 84, 83].map((value, index) => (
-            <div key={benchmarkRows[index].label}>
-              <span>{benchmarkRows[index].label}</span>
-              <i><b style={{ width: `${value}%` }} /></i>
-              <strong>{value}%</strong>
-            </div>
+        <div className="benchmark-chart" aria-label="Workspace progress chart">
+          {stages.map((stage) => (
+            <div key={stage.label}><span>{stage.label}</span><i><b style={{ width: `${stage.percent}%` }} /></i><strong>{stage.value}/{stats.total}</strong></div>
           ))}
         </div>
       </article>
 
       <div className="table-card benchmark-table">
-        <div className="table-head benchmark-grid">
-          <span>Rank</span><span>Task category</span><span>Bouts</span><span>Agreement</span><span>Lift</span>
-        </div>
-        {benchmarkRows.map((row) => (
-          <div className="table-row benchmark-grid" key={row.rank}>
-            <span className="rank-number">0{row.rank}</span>
-            <strong>{row.label}</strong>
-            <span>{row.bouts}</span>
-            <span>{row.agreement}</span>
-            <span className="positive">{row.lift} <ArrowUpRight size={14} /></span>
+        <div className="table-head benchmark-grid"><span>ID</span><span>Bout</span><span>Pool</span><span>Status</span><span>Verdict</span></div>
+        {snapshot.battles.map((battle) => (
+          <div className="table-row benchmark-grid" key={battle.id}>
+            <span className="rank-number">{battle.id.slice(0, 7)}</span>
+            <strong>{battle.title}</strong>
+            <span>${formatAmount(battle.reward)}</span>
+            <span>{battle.status}</span>
+            <span className={battle.verdict ? "positive" : ""}>{battle.verdict ? `Patch ${battle.verdict.winner}` : "—"}</span>
           </div>
         ))}
+        {snapshot.battles.length === 0 && <div className="empty-state"><strong>No measurements yet.</strong><span>Create a real bout to populate this page.</span></div>}
       </div>
     </section>
   );
+}
+
+function formatAmount(value: number): string {
+  return new Intl.NumberFormat(undefined, { maximumFractionDigits: 6 }).format(value);
 }

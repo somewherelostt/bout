@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { AlertTriangle, LoaderCircle, RefreshCw } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { createBout, loadWorkspace } from "./api";
 import { AppShell } from "./components/AppShell";
 import { FeedbackDialog } from "./components/FeedbackDialog";
-import { initialActivity } from "./data/mock";
 import { AwardsPage } from "./pages/AwardsPage";
 import { BattlePage } from "./pages/BattlePage";
 import { BenchmarksPage } from "./pages/BenchmarksPage";
@@ -11,62 +12,83 @@ import { HomePage } from "./pages/HomePage";
 import { JudgePage } from "./pages/JudgePage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { VaultPage } from "./pages/VaultPage";
-import type { ActivityItem } from "./types";
-
-const storageKey = "bout-demo-activity";
+import type { CreateBoutInput, WorkspaceSnapshot } from "./types";
 
 export function App() {
   const navigate = useNavigate();
   const location = useLocation();
   const [navOpen, setNavOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
-  const [activity, setActivity] = useState<ActivityItem[]>(() => {
+  const [snapshot, setSnapshot] = useState<WorkspaceSnapshot | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const refresh = useCallback(async () => {
     try {
-      const saved = localStorage.getItem(storageKey);
-      return saved ? (JSON.parse(saved) as ActivityItem[]) : initialActivity;
-    } catch {
-      return initialActivity;
+      setError(null);
+      setSnapshot(await loadWorkspace());
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : String(reason));
     }
-  });
+  }, []);
 
   useEffect(() => {
-    localStorage.setItem(storageKey, JSON.stringify(activity));
-  }, [activity]);
+    void refresh();
+  }, [refresh]);
 
   useEffect(() => {
     setNavOpen(false);
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [location.pathname]);
 
-  const createBout = (title: string, reward: number) => {
-    const id = String(8500 + activity.length + 1);
-    const next: ActivityItem = {
-      id,
-      title,
-      meta: "private repository · just now",
-      reward,
-      status: "Draft",
-    };
-    setActivity((current) => [next, ...current]);
-    navigate(`/battle/${id}`);
+  const handleCreate = async (input: CreateBoutInput) => {
+    const result = await createBout(input);
+    await refresh();
+    navigate(`/battle/${result.battleId}`);
   };
+
+  if (!snapshot && !error) {
+    return (
+      <div className="boot-state">
+        <LoaderCircle className="spin" size={22} />
+        <strong>Opening your Bout workspace…</strong>
+        <span>Reading local battle bundles and live connection status.</span>
+      </div>
+    );
+  }
+
+  if (!snapshot) {
+    return (
+      <div className="boot-state error-state">
+        <AlertTriangle size={24} />
+        <strong>The local Bout API is unavailable.</strong>
+        <span>{error}</span>
+        <button className="primary-button" type="button" onClick={() => void refresh()}>
+          <RefreshCw size={16} /> Retry
+        </button>
+      </div>
+    );
+  }
 
   return (
     <AppShell
-      activity={activity}
+      activity={snapshot.battles}
       navOpen={navOpen}
       onNavOpen={() => setNavOpen(true)}
       onNavClose={() => setNavOpen(false)}
       onFeedback={() => setFeedbackOpen(true)}
     >
+      {error && <div className="sync-warning"><AlertTriangle size={14} /> {error}</div>}
       <Routes>
-        <Route path="/" element={<HomePage onCreate={createBout} />} />
-        <Route path="/history" element={<HistoryPage activity={activity} />} />
-        <Route path="/judge" element={<JudgePage />} />
-        <Route path="/vault" element={<VaultPage />} />
-        <Route path="/benchmarks" element={<BenchmarksPage />} />
-        <Route path="/awards" element={<AwardsPage />} />
-        <Route path="/battle/:id" element={<BattlePage activity={activity} />} />
+        <Route path="/" element={<HomePage onCreate={handleCreate} />} />
+        <Route path="/history" element={<HistoryPage battles={snapshot.battles} />} />
+        <Route path="/judge" element={<JudgePage snapshot={snapshot} />} />
+        <Route path="/vault" element={<VaultPage snapshot={snapshot} />} />
+        <Route path="/benchmarks" element={<BenchmarksPage snapshot={snapshot} />} />
+        <Route path="/awards" element={<AwardsPage snapshot={snapshot} />} />
+        <Route
+          path="/battle/:id"
+          element={<BattlePage battles={snapshot.battles} onSaved={refresh} />}
+        />
         <Route path="/new" element={<Navigate to="/" replace />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

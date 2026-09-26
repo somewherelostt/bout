@@ -1,20 +1,20 @@
 import { ArrowRight, Search, SlidersHorizontal } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import type { ActivityItem } from "../types";
+import type { BoutRecord } from "../types";
 
-export function HistoryPage({ activity }: { activity: ActivityItem[] }) {
+export function HistoryPage({ battles }: { battles: BoutRecord[] }) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("All");
   const navigate = useNavigate();
   const filtered = useMemo(
     () =>
-      activity.filter(
+      battles.filter(
         (item) =>
           item.title.toLowerCase().includes(query.toLowerCase()) &&
           (status === "All" || item.status === status),
       ),
-    [activity, query, status],
+    [battles, query, status],
   );
 
   return (
@@ -40,7 +40,8 @@ export function HistoryPage({ activity }: { activity: ActivityItem[] }) {
           <select value={status} onChange={(event) => setStatus(event.target.value)}>
             <option>All</option>
             <option>Draft</option>
-            <option>Judging</option>
+            <option>Prepared</option>
+            <option>Published</option>
             <option>Complete</option>
           </select>
         </label>
@@ -64,21 +65,25 @@ export function HistoryPage({ activity }: { activity: ActivityItem[] }) {
             <span className="row-title">
               <b>#{item.id}</b>
               <strong>{item.title}</strong>
-              <small>{item.meta.split(" · ")[0]}</small>
+              <small>{item.repo}</small>
             </span>
             <span className={`status-pill ${item.status.toLowerCase()}`}>{item.status}</span>
             <span className="money">${item.reward}</span>
-            <span>{item.meta.split(" · ")[1] ?? "just now"}</span>
+            <span>{formatDate(item.createdAt)}</span>
             <ArrowRight size={16} />
           </button>
         ))}
         {filtered.length === 0 && (
           <div className="empty-state">
-            <strong>No bouts match that search.</strong>
-            <span>Try a different keyword or status.</span>
+            <strong>{battles.length === 0 ? "No local bouts yet." : "No bouts match that search."}</strong>
+            <span>{battles.length === 0 ? "Create one from two real patch files." : "Try a different keyword or status."}</span>
           </div>
         )}
       </div>
     </section>
   );
+}
+
+function formatDate(value: string): string {
+  return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", year: "numeric" }).format(new Date(value));
 }

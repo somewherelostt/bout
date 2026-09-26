@@ -82,7 +82,9 @@ npm install --prefix web
 npm run dev:web
 ```
 
-Open `http://localhost:4173`. The workspace includes the bout composer, history, judge queue, vault, benchmarks, awards, and blind comparison flow. Demo state stays in the browser; it does not publish a bounty or spend funds.
+Open `http://localhost:4173`. The workspace includes the bout composer, history, judge queue, vault, benchmarks, awards, and blind comparison flow. It reads and writes real `.bout` workspace artifacts through a local API; there is no seeded browser dataset.
+
+The composer creates a real anonymized battle bundle and prepares its Gibwork bounty draft. It does not publish the draft or move funds. To read live code-review bounties into the judge queue, provide `SOLANA_PRIVATE_KEY` only to the local API process before starting the workspace. The key is never returned to browser code.
 
 ## Run a blind battle
 

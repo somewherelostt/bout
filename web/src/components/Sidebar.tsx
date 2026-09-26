@@ -10,17 +10,17 @@ import {
   ChartNoAxesColumnIncreasing,
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import type { ActivityItem } from "../types";
+import type { BoutRecord } from "../types";
 import { Brand } from "./Brand";
 
 interface SidebarProps {
-  activity: ActivityItem[];
+  activity: BoutRecord[];
   open: boolean;
   onOpen: () => void;
   onClose: () => void;
 }
 
-const statusClass = (status: ActivityItem["status"]) =>
+const statusClass = (status: BoutRecord["status"]) =>
   status.toLowerCase().replace(" ", "-");
 
 export function Sidebar({ activity, open, onOpen, onClose }: SidebarProps) {
@@ -106,7 +106,7 @@ export function Sidebar({ activity, open, onOpen, onClose }: SidebarProps) {
               >
                 <span className="activity-copy">
                   <strong>{item.title}</strong>
-                  <small>{item.meta}</small>
+                  <small>{item.repo} · {formatRelative(item.createdAt)}</small>
                 </span>
                 <span className="activity-meta">
                   <b>${item.reward}</b>
@@ -117,6 +117,7 @@ export function Sidebar({ activity, open, onOpen, onClose }: SidebarProps) {
                 </span>
               </button>
             ))}
+            {activity.length === 0 && <p className="sidebar-empty">No local bouts yet.</p>}
           </div>
         </section>
 
@@ -149,4 +150,15 @@ export function Sidebar({ activity, open, onOpen, onClose }: SidebarProps) {
       </aside>
     </>
   );
+}
+
+function formatRelative(value: string): string {
+  const delta = Date.now() - new Date(value).getTime();
+  if (!Number.isFinite(delta) || delta < 0) return "just now";
+  const minutes = Math.floor(delta / 60_000);
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
 }

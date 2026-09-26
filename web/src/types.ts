@@ -1,25 +1,71 @@
-export type BoutStatus = "Open" | "Judging" | "Complete" | "Draft";
+export type BoutStatus = "Published" | "Prepared" | "Complete" | "Draft";
 
 export interface BoutRecord {
   id: string;
   title: string;
   repo: string;
-  category: string;
-  languages: string[];
   reward: number;
-  reviews: number;
-  estimate: string;
-  deadline: string;
+  minimumPayout: number;
+  createdAt: string;
+  deadline: string | null;
   status: BoutStatus;
-  summary: string;
-  patchA: { additions: number; deletions: number; files: number };
-  patchB: { additions: number; deletions: number; files: number };
+  task: string;
+  verificationCommand: string | null;
+  patchA: PatchRecord;
+  patchB: PatchRecord;
+  verdict: VerdictRecord | null;
+  publicationTaskId: string | null;
 }
 
-export interface ActivityItem {
+export interface PatchRecord {
+  content: string;
+  sha256: string;
+  additions: number;
+  deletions: number;
+  files: number;
+}
+
+export interface VerdictRecord {
+  winner: "A" | "B";
+  rationale: string;
+  submittedAt: string;
+}
+
+export interface LiveBounty {
   id: string;
   title: string;
-  meta: string;
+  tags: string[];
   reward: number;
-  status: BoutStatus;
+  symbol: string;
+  submissions: number;
+  deadline: string | null;
+  minSubmissionAmount: number;
+}
+
+export interface WorkspaceStats {
+  total: number;
+  prepared: number;
+  published: number;
+  reviewed: number;
+  totalPool: number;
+}
+
+export interface WorkspaceSnapshot {
+  battles: BoutRecord[];
+  liveBounties: LiveBounty[];
+  liveStatus: "connected" | "unconfigured" | "error";
+  liveMessage: string;
+  workspacePath: string;
+  stats: WorkspaceStats;
+}
+
+export interface CreateBoutInput {
+  task: string;
+  repository: string;
+  candidateOne: string;
+  candidateTwo: string;
+  verificationCommand?: string;
+  poolAmount: number;
+  minimumPayout: number;
+  deadline?: string;
 }

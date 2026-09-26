@@ -1,10 +1,10 @@
 import { MessageSquareText } from "lucide-react";
 import type { PropsWithChildren } from "react";
-import type { ActivityItem } from "../types";
+import type { BoutRecord } from "../types";
 import { Sidebar } from "./Sidebar";
 
 interface AppShellProps extends PropsWithChildren {
-  activity: ActivityItem[];
+  activity: BoutRecord[];
   navOpen: boolean;
   onNavOpen: () => void;
   onNavClose: () => void;

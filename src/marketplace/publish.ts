@@ -24,6 +24,15 @@ export async function publishBounty(input: PublishBountyInput): Promise<{
   indexWarning?: string;
 }> {
   const battleDirectory = path.resolve(input.workspace, ".bout", "battles", input.battleId);
+  const publicationPath = path.join(battleDirectory, "private", "publication.json");
+  try {
+    const existing = await readJson(publicationPath, publicationRecordSchema);
+    throw new Error(
+      `Battle ${input.battleId} is already published as Gibwork task ${existing.taskId}.`,
+    );
+  } catch (error) {
+    if (!isMissingFile(error)) throw error;
+  }
   const draft = await readJson(
     path.join(battleDirectory, "review", "bounty-draft.json"),
     bountyDraftSchema,
@@ -42,7 +51,6 @@ export async function publishBounty(input: PublishBountyInput): Promise<{
 
   const privateDirectory = path.join(battleDirectory, "private");
   await mkdir(privateDirectory, { recursive: true });
-  const publicationPath = path.join(privateDirectory, "publication.json");
   await writeJson(publicationPath, publication);
   let indexWarning: string | undefined;
   try {
@@ -60,11 +68,15 @@ export async function publishBounty(input: PublishBountyInput): Promise<{
 }
 
 export async function createStageTaskCreator(keypairPath: string): Promise<TaskCreator> {
-  const privateKey = await readPrivateKeyFile(keypairPath);
-  const client = createGibworkClient({ privateKey, production: false });
+  const client = await createStageGibworkClient(keypairPath);
   return {
     create: (input) => client.tasks.create(input),
   };
+}
+
+export async function createStageGibworkClient(keypairPath: string) {
+  const privateKey = await readPrivateKeyFile(keypairPath);
+  return createGibworkClient({ privateKey, production: false });
 }
 
 async function readPrivateKeyFile(keypairPath: string): Promise<string | readonly number[]> {
@@ -80,4 +92,8 @@ async function readPrivateKeyFile(keypairPath: string): Promise<string | readonl
   }
 
   return trimmed;
+}
+
+function isMissingFile(error: unknown): boolean {
+  return typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT";
 }

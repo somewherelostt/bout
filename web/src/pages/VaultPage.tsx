@@ -48,7 +48,8 @@ export function VaultPage({ snapshot }: { snapshot: WorkspaceSnapshot }) {
           <div className="criteria-list">
             <span><b>Prepared drafts</b><small>{snapshot.stats.prepared}</small></span>
             <span><b>Published bounties</b><small>{snapshot.stats.published}</small></span>
-            <span><b>Saved verdicts</b><small>{snapshot.stats.reviewed}</small></span>
+            <span><b>Synced review sets</b><small>{snapshot.stats.synced}</small></span>
+            <span><b>Final reports</b><small>{snapshot.stats.reported}</small></span>
           </div>
           <p>Backed by {snapshot.storage.engine}; implementation paths stay hidden from the browser.</p>
         </article>

@@ -78,6 +78,32 @@ export const verdicts = sqliteTable("verdicts", {
   verdictPath: text("verdict_path").notNull(),
 });
 
+export const submissionSyncs = sqliteTable("submission_syncs", {
+  battleId: text("battle_id")
+    .primaryKey()
+    .references(() => battles.id, { onDelete: "cascade" }),
+  taskId: text("task_id").notNull(),
+  syncedAt: text("synced_at").notNull(),
+  submissionCount: integer("submission_count").notNull(),
+  validReviewCount: integer("valid_review_count").notNull(),
+  submissionsPath: text("submissions_path").notNull(),
+});
+
+export const reports = sqliteTable("reports", {
+  battleId: text("battle_id")
+    .primaryKey()
+    .references(() => battles.id, { onDelete: "cascade" }),
+  outcome: text("outcome")
+    .$type<"A" | "B" | "TIE" | "BOTH_FAILED" | "NO_CONSENSUS">()
+    .notNull(),
+  validReviewCount: integer("valid_review_count").notNull(),
+  averageConfidenceMilli: integer("average_confidence_milli"),
+  resolvedLabel: text("resolved_label").$type<"A" | "B">(),
+  generatedAt: text("generated_at").notNull(),
+  jsonPath: text("json_path").notNull(),
+  markdownPath: text("markdown_path").notNull(),
+});
+
 export const artifacts = sqliteTable(
   "artifacts",
   {

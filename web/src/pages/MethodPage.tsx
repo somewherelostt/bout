@@ -30,6 +30,13 @@ const steps = [
     copy: "Draft creation is offline and moves no funds. Publishing is a separate CLI action with an exact confirmation phrase because the stage environment uses real mainnet USDC.",
     proof: "bout bounty prepare · bout bounty publish",
   },
+  {
+    number: "05",
+    icon: Binary,
+    title: "Synchronize reviews and resolve the private winner",
+    copy: "Bout retrieves creator-visible Gibwork submissions, validates the required response contract, excludes rejected reviews, aggregates consensus, and exports creator-only Markdown and JSON reports.",
+    proof: "bout bounty sync · bout report generate",
+  },
 ];
 
 export function MethodPage({ snapshot }: { snapshot: WorkspaceSnapshot }) {
@@ -60,7 +67,7 @@ export function MethodPage({ snapshot }: { snapshot: WorkspaceSnapshot }) {
           <div><strong>Draft</strong><span>A local anonymous bundle exists; no bounty payload has been prepared.</span></div>
           <div><strong>Prepared</strong><span>A validated bounty-draft.json exists locally. No network request or transfer is implied.</span></div>
           <div><strong>Published</strong><span>A private publication receipt exists after Gibwork returned a task identifier.</span></div>
-          <div><strong>Complete</strong><span>A structured verdict.json exists in the reviewer-facing bundle.</span></div>
+          <div><strong>Complete</strong><span>A structured local verdict or a final report generated from synchronized Gibwork reviews exists.</span></div>
         </div>
       </section>
 

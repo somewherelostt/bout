@@ -19,7 +19,7 @@ import {
 import { useState, type ReactNode } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { saveVerdict } from "../api";
-import type { BoutRecord, VerdictRecord } from "../types";
+import type { BoutRecord, ReportSummary, VerdictRecord } from "../types";
 
 type Outcome = VerdictRecord["winner"];
 type Confidence = VerdictRecord["confidence"];
@@ -98,6 +98,23 @@ export function BattlePage({ battles, onSaved }: { battles: BoutRecord[]; onSave
         <div><ListChecks size={19} /><span><strong>Shared task and acceptance criteria</strong><small>Both candidates are judged against this exact saved task.</small></span></div>
         <pre>{battle.task}</pre>
       </article>
+
+      {battle.report && (
+        <article className="task-brief">
+          <div>
+            <BadgeCheck size={19} />
+            <span>
+              <strong>Gibwork review report: {reportOutcome(battle.report.outcome)}</strong>
+              <small>{battle.report.validReviewCount} valid of {battle.submissionCount} synced submissions · generated {formatDateTime(battle.report.generatedAt)}</small>
+            </span>
+          </div>
+          <p>
+            {battle.report.resolvedLabel
+              ? `The private identity map resolves the consensus to candidate ${battle.report.resolvedLabel}.`
+              : "No single source candidate was resolved from the available review consensus."}
+          </p>
+        </article>
+      )}
 
       <div className="comparison-heading">
         <div><GitCompareArrows size={18} /><span><strong>Compare the saved patches</strong><small>Content and hashes come directly from the review bundle.</small></span></div>
@@ -179,6 +196,13 @@ function outcomeDescription(value: Outcome): string {
   if (value === "TIE") return "No decisive preference";
   if (value === "BOTH_FAILED") return "Neither patch satisfies the task";
   return `Patch ${value} preferred`;
+}
+
+function reportOutcome(value: ReportSummary["outcome"]): string {
+  if (value === "NO_CONSENSUS") return "No consensus";
+  if (value === "BOTH_FAILED") return "Both failed";
+  if (value === "TIE") return "Tie";
+  return `Patch ${value}`;
 }
 
 function formatAmount(value: number): string {

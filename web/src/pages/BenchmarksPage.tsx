@@ -4,20 +4,27 @@ import type { WorkspaceSnapshot } from "../types";
 export function BenchmarksPage({ snapshot }: { snapshot: WorkspaceSnapshot }) {
   const { stats, battles } = snapshot;
   const percent = (value: number, denominator = stats.total) => denominator === 0 ? 0 : Math.round((value / denominator) * 100);
-  const decided = battles.filter((battle) => battle.verdict);
+  const decided = battles.flatMap((battle) => {
+    if (battle.report) return [{ battle, outcome: battle.report.outcome, confidence: battle.report.averageConfidence }];
+    if (battle.verdict) return [{ battle, outcome: battle.verdict.winner, confidence: battle.verdict.confidence }];
+    return [];
+  });
   const outcomes = [
-    { key: "A", label: "Patch A preferred", value: decided.filter((battle) => battle.verdict?.winner === "A").length },
-    { key: "B", label: "Patch B preferred", value: decided.filter((battle) => battle.verdict?.winner === "B").length },
-    { key: "TIE", label: "No decisive preference", value: decided.filter((battle) => battle.verdict?.winner === "TIE").length },
-    { key: "BOTH_FAILED", label: "Both failed", value: decided.filter((battle) => battle.verdict?.winner === "BOTH_FAILED").length },
+    { key: "A", label: "Patch A preferred", value: decided.filter((decision) => decision.outcome === "A").length },
+    { key: "B", label: "Patch B preferred", value: decided.filter((decision) => decision.outcome === "B").length },
+    { key: "TIE", label: "No decisive preference", value: decided.filter((decision) => decision.outcome === "TIE").length },
+    { key: "BOTH_FAILED", label: "Both failed", value: decided.filter((decision) => decision.outcome === "BOTH_FAILED").length },
+    { key: "NO_CONSENSUS", label: "No consensus", value: decided.filter((decision) => decision.outcome === "NO_CONSENSUS").length },
   ];
-  const averageConfidence = decided.length
-    ? decided.reduce((sum, battle) => sum + (battle.verdict?.confidence ?? 0), 0) / decided.length
+  const rated = decided.filter((decision) => decision.confidence !== null);
+  const averageConfidence = rated.length
+    ? rated.reduce((sum, decision) => sum + (decision.confidence ?? 0), 0) / rated.length
     : null;
   const stages = [
     { label: "Prepared bounty drafts", value: stats.prepared, definition: "bounty-draft.json exists" },
     { label: "Published through Gibwork", value: stats.published, definition: "publication.json exists" },
-    { label: "Verdicts recorded", value: stats.reviewed, definition: "verdict.json validates" },
+    { label: "Submissions synchronized", value: stats.synced, definition: "submissions.json validates" },
+    { label: "Final reports generated", value: stats.reported, definition: "report.json validates" },
   ];
 
   const exportSnapshot = () => {
@@ -45,7 +52,7 @@ export function BenchmarksPage({ snapshot }: { snapshot: WorkspaceSnapshot }) {
 
       <div className="metric-grid">
         <article className="metric-card"><span><BarChart3 size={18} /> Battle bundles</span><strong>{stats.total}</strong><small>denominator for workflow rates</small></article>
-        <article className="metric-card"><span><FileCheck2 size={18} /> Valid verdicts</span><strong>{stats.reviewed}</strong><small>{percent(stats.reviewed)}% of {stats.total} bundles</small></article>
+        <article className="metric-card"><span><FileCheck2 size={18} /> Final reports</span><strong>{stats.reported}</strong><small>{percent(stats.reported)}% of {stats.total} bundles</small></article>
         <article className="metric-card"><span><CircleDollarSign size={18} /> Declared pools</span><strong>${formatAmount(stats.totalPool)}</strong><small>draft amounts, not escrow proof</small></article>
       </div>
 
@@ -68,7 +75,7 @@ export function BenchmarksPage({ snapshot }: { snapshot: WorkspaceSnapshot }) {
         </article>
         <article className="benchmark-panel confidence-panel">
           <div className="panel-heading"><div><span className="eyebrow">REVIEW CONFIDENCE</span><h2>Mean self-rating</h2></div><span className="dataset-note">1–5 scale</span></div>
-          {averageConfidence === null ? <HonestNoData copy="Confidence is undefined until the first structured verdict is saved." /> : <><strong className="confidence-number">{averageConfidence.toFixed(1)}</strong><div className="confidence-track"><i style={{ width: `${(averageConfidence / 5) * 100}%` }} /></div><p>Arithmetic mean across {decided.length} saved verdict{decided.length === 1 ? "" : "s"}. This is reviewer confidence, not accuracy.</p></>}
+          {averageConfidence === null ? <HonestNoData copy="Confidence is undefined until a structured verdict or report is saved." /> : <><strong className="confidence-number">{averageConfidence.toFixed(1)}</strong><div className="confidence-track"><i style={{ width: `${(averageConfidence / 5) * 100}%` }} /></div><p>Arithmetic mean across {rated.length} recorded decision{rated.length === 1 ? "" : "s"}. This is reviewer confidence, not accuracy.</p></>}
         </article>
       </div>
 
@@ -90,7 +97,7 @@ export function BenchmarksPage({ snapshot }: { snapshot: WorkspaceSnapshot }) {
             <strong>{battle.title}</strong>
             <span>${formatAmount(battle.reward)}</span>
             <span>{battle.status}</span>
-            <span className={battle.verdict ? "positive" : ""}>{battle.verdict ? outcomeLabel(battle.verdict.winner) : "—"}</span>
+            <span className={battle.report || battle.verdict ? "positive" : ""}>{battle.report ? outcomeLabel(battle.report.outcome) : battle.verdict ? outcomeLabel(battle.verdict.winner) : "—"}</span>
           </div>
         ))}
         {battles.length === 0 && <div className="empty-state"><strong>No measurements yet.</strong><span>Create a real bout to populate this page.</span></div>}
@@ -103,7 +110,8 @@ function HonestNoData({ copy }: { copy: string }) {
   return <div className="inline-no-data"><Info size={17} /><span><strong>Insufficient data</strong>{copy}</span></div>;
 }
 
-function outcomeLabel(outcome: "A" | "B" | "TIE" | "BOTH_FAILED"): string {
+function outcomeLabel(outcome: "A" | "B" | "TIE" | "BOTH_FAILED" | "NO_CONSENSUS"): string {
+  if (outcome === "NO_CONSENSUS") return "No consensus";
   if (outcome === "TIE") return "Tie";
   if (outcome === "BOTH_FAILED") return "Both failed";
   return `Patch ${outcome}`;

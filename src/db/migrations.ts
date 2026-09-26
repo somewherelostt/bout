@@ -93,6 +93,30 @@ const migrations: readonly Migration[] = [
       CREATE INDEX IF NOT EXISTS workflow_events_battle_time_idx ON workflow_events(battle_id, occurred_at);
     `,
   },
+  {
+    id: "0002_review_results",
+    sql: `
+      CREATE TABLE IF NOT EXISTS submission_syncs (
+        battle_id TEXT PRIMARY KEY NOT NULL REFERENCES battles(id) ON DELETE CASCADE,
+        task_id TEXT NOT NULL,
+        synced_at TEXT NOT NULL,
+        submission_count INTEGER NOT NULL,
+        valid_review_count INTEGER NOT NULL,
+        submissions_path TEXT NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS reports (
+        battle_id TEXT PRIMARY KEY NOT NULL REFERENCES battles(id) ON DELETE CASCADE,
+        outcome TEXT NOT NULL CHECK(outcome IN ('A', 'B', 'TIE', 'BOTH_FAILED', 'NO_CONSENSUS')),
+        valid_review_count INTEGER NOT NULL,
+        average_confidence_milli INTEGER,
+        resolved_label TEXT CHECK(resolved_label IN ('A', 'B')),
+        generated_at TEXT NOT NULL,
+        json_path TEXT NOT NULL,
+        markdown_path TEXT NOT NULL
+      );
+    `,
+  },
 ];
 
 export function applyMigrations(sqlite: Database.Database): void {

@@ -5,7 +5,7 @@ export function SecurityPage({ snapshot }: { snapshot: WorkspaceSnapshot }) {
   const controls = [
     ["Candidate equality guard", "Identical candidate hashes are rejected before a battle directory is committed."],
     ["Atomic local writes", "Battle files are assembled in a temporary directory and renamed into place only after every artifact write succeeds."],
-    ["Transactional metadata", "Structured battle, bounty, publication, and verdict metadata is committed through SQLite transactions."],
+    ["Transactional metadata", "Structured battle, bounty, publication, submission-sync, verdict, and report metadata is committed through SQLite transactions."],
     ["Split visibility", "Reviewer material and creator-only identity state live in separate directories."],
     ["Server-side wallet boundary", "The browser receives connection status, never the configured private key."],
     ["Explicit money gate", "Publishing requires a dedicated CLI command and an exact real-funds confirmation phrase."],

@@ -45,7 +45,7 @@ describe("SQLite workspace index", () => {
       ).toEqual({ count: 1 });
       expect(
         sqlite.prepare("SELECT COUNT(*) AS count FROM bout_migrations").get(),
-      ).toEqual({ count: 1 });
+      ).toEqual({ count: 2 });
     } finally {
       sqlite.close();
     }

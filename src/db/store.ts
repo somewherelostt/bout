@@ -9,7 +9,9 @@ import { reviewManifestSchema, verdictRecordSchema, type VerdictRecord } from ".
 import {
   bountyDraftSchema,
   decimalToMicros,
+  finalReportSchema,
   publicationRecordSchema,
+  submissionSyncSchema,
 } from "../marketplace/schemas.js";
 import { applyMigrations } from "./migrations.js";
 import {
@@ -18,6 +20,8 @@ import {
   bountyDrafts,
   candidates,
   publications,
+  reports,
+  submissionSyncs,
   verdicts,
   workflowEvents,
 } from "./schema.js";
@@ -47,6 +51,17 @@ export interface IndexedBattle {
   publicationTaskId: string | null;
   hasBountyDraft: boolean;
   hasPublicationReceipt: boolean;
+  submissionCount: number;
+  validReviewCount: number;
+  report: IndexedReport | null;
+}
+
+export interface IndexedReport {
+  outcome: "A" | "B" | "TIE" | "BOTH_FAILED" | "NO_CONSENSUS";
+  validReviewCount: number;
+  averageConfidence: number | null;
+  resolvedLabel: "A" | "B" | null;
+  generatedAt: string;
 }
 
 export interface ReconciliationResult {
@@ -82,7 +97,17 @@ export function getBoutArtifactRoot(workspace: string): string {
 export async function syncBattleToDatabase(workspace: string, battleId: string): Promise<void> {
   const battleDirectory = path.resolve(workspace, ".bout", "battles", battleId);
   const reviewDirectory = path.join(battleDirectory, "review");
-  const [manifest, taskBuffer, candidateABuffer, candidateBBuffer, draft, publication, verdict] =
+  const [
+    manifest,
+    taskBuffer,
+    candidateABuffer,
+    candidateBBuffer,
+    draft,
+    publication,
+    verdict,
+    submissionSync,
+    report,
+  ] =
     await Promise.all([
       readJson(path.join(reviewDirectory, "manifest.json"), reviewManifestSchema),
       readFile(path.join(reviewDirectory, "task.md")),
@@ -94,10 +119,24 @@ export async function syncBattleToDatabase(workspace: string, battleId: string):
         publicationRecordSchema,
       ),
       readOptionalJson(path.join(reviewDirectory, "verdict.json"), verdictRecordSchema),
+      readOptionalJson(
+        path.join(battleDirectory, "private", "submissions.json"),
+        submissionSyncSchema,
+      ),
+      readOptionalJson(
+        path.join(battleDirectory, "private", "report.json"),
+        finalReportSchema,
+      ),
     ]);
 
   if (manifest.battleId !== battleId) {
     throw new Error(`Battle directory ${battleId} does not match manifest ${manifest.battleId}.`);
+  }
+  if (submissionSync && publication?.taskId !== submissionSync.taskId) {
+    throw new Error("Synced submissions do not match the published Gibwork task.");
+  }
+  if (report && (report.taskId !== submissionSync?.taskId || report.battleId !== battleId)) {
+    throw new Error("The final report does not match this battle and submission sync.");
   }
 
   const task = taskBuffer.toString("utf8");
@@ -275,6 +314,69 @@ export async function syncBattleToDatabase(workspace: string, battleId: string):
         transaction.delete(verdicts).where(eq(verdicts.battleId, battleId)).run();
       }
 
+      if (submissionSync) {
+        const validReviewCount = submissionSync.submissions.filter(
+          (submission) => submission.status !== "REJECTED" && submission.verdict !== null,
+        ).length;
+        transaction
+          .insert(submissionSyncs)
+          .values({
+            battleId,
+            taskId: submissionSync.taskId,
+            syncedAt: submissionSync.syncedAt,
+            submissionCount: submissionSync.submissions.length,
+            validReviewCount,
+            submissionsPath: artifactPath(battleId, "private/submissions.json"),
+          })
+          .onConflictDoUpdate({
+            target: submissionSyncs.battleId,
+            set: {
+              taskId: submissionSync.taskId,
+              syncedAt: submissionSync.syncedAt,
+              submissionCount: submissionSync.submissions.length,
+              validReviewCount,
+              submissionsPath: artifactPath(battleId, "private/submissions.json"),
+            },
+          })
+          .run();
+      } else {
+        transaction.delete(submissionSyncs).where(eq(submissionSyncs.battleId, battleId)).run();
+      }
+
+      if (report) {
+        transaction
+          .insert(reports)
+          .values({
+            battleId,
+            outcome: report.aggregate.outcome,
+            validReviewCount: report.aggregate.validReviews,
+            averageConfidenceMilli: report.aggregate.averageConfidence === null
+              ? null
+              : Math.round(report.aggregate.averageConfidence * 1_000),
+            resolvedLabel: report.resolvedWinner?.assignedLabel ?? null,
+            generatedAt: report.generatedAt,
+            jsonPath: artifactPath(battleId, "private/report.json"),
+            markdownPath: artifactPath(battleId, "private/report.md"),
+          })
+          .onConflictDoUpdate({
+            target: reports.battleId,
+            set: {
+              outcome: report.aggregate.outcome,
+              validReviewCount: report.aggregate.validReviews,
+              averageConfidenceMilli: report.aggregate.averageConfidence === null
+                ? null
+                : Math.round(report.aggregate.averageConfidence * 1_000),
+              resolvedLabel: report.resolvedWinner?.assignedLabel ?? null,
+              generatedAt: report.generatedAt,
+              jsonPath: artifactPath(battleId, "private/report.json"),
+              markdownPath: artifactPath(battleId, "private/report.md"),
+            },
+          })
+          .run();
+      } else {
+        transaction.delete(reports).where(eq(reports.battleId, battleId)).run();
+      }
+
       insertWorkflowEvent(transaction, {
         eventKey: `${battleId}:created`,
         battleId,
@@ -311,6 +413,30 @@ export async function syncBattleToDatabase(workspace: string, battleId: string):
           eventType: "verdict.saved",
           occurredAt: verdict.submittedAt,
           payload: { winner: verdict.winner, confidence: verdict.confidence },
+        });
+      }
+      if (submissionSync) {
+        insertWorkflowEvent(transaction, {
+          eventKey: `${battleId}:submissions:${submissionSync.syncedAt}`,
+          battleId,
+          eventType: "submissions.synced",
+          occurredAt: submissionSync.syncedAt,
+          payload: {
+            taskId: submissionSync.taskId,
+            submissionCount: submissionSync.submissions.length,
+          },
+        });
+      }
+      if (report) {
+        insertWorkflowEvent(transaction, {
+          eventKey: `${battleId}:report:${report.generatedAt}`,
+          battleId,
+          eventType: "report.generated",
+          occurredAt: report.generatedAt,
+          payload: {
+            outcome: report.aggregate.outcome,
+            validReviews: report.aggregate.validReviews,
+          },
         });
       }
     });
@@ -376,6 +502,8 @@ export async function listIndexedBattles(workspace: string): Promise<IndexedBatt
     const draftRows = opened.db.select().from(bountyDrafts).all();
     const publicationRows = opened.db.select().from(publications).all();
     const verdictRows = opened.db.select().from(verdicts).all();
+    const submissionSyncRows = opened.db.select().from(submissionSyncs).all();
+    const reportRows = opened.db.select().from(reports).all();
 
     const candidateMap = new Map(
       candidateRows.map((candidate) => [`${candidate.battleId}:${candidate.label}`, candidate]),
@@ -385,6 +513,10 @@ export async function listIndexedBattles(workspace: string): Promise<IndexedBatt
       publicationRows.map((publication) => [publication.battleId, publication]),
     );
     const verdictMap = new Map(verdictRows.map((verdict) => [verdict.battleId, verdict]));
+    const submissionSyncMap = new Map(
+      submissionSyncRows.map((submissionSync) => [submissionSync.battleId, submissionSync]),
+    );
+    const reportMap = new Map(reportRows.map((report) => [report.battleId, report]));
     const indexed: IndexedBattle[] = [];
 
     for (const battle of battleRows) {
@@ -394,6 +526,8 @@ export async function listIndexedBattles(workspace: string): Promise<IndexedBatt
       const draft = draftMap.get(battle.id);
       const publication = publicationMap.get(battle.id);
       const verdict = verdictMap.get(battle.id);
+      const submissionSync = submissionSyncMap.get(battle.id);
+      const report = reportMap.get(battle.id);
 
       indexed.push({
         id: battle.id,
@@ -423,6 +557,19 @@ export async function listIndexedBattles(workspace: string): Promise<IndexedBatt
         publicationTaskId: publication?.taskId ?? null,
         hasBountyDraft: draft !== undefined,
         hasPublicationReceipt: publication !== undefined,
+        submissionCount: submissionSync?.submissionCount ?? 0,
+        validReviewCount: submissionSync?.validReviewCount ?? 0,
+        report: report
+          ? {
+              outcome: report.outcome,
+              validReviewCount: report.validReviewCount,
+              averageConfidence: report.averageConfidenceMilli === null
+                ? null
+                : report.averageConfidenceMilli / 1_000,
+              resolvedLabel: report.resolvedLabel,
+              generatedAt: report.generatedAt,
+            }
+          : null,
       });
     }
 
@@ -480,6 +627,21 @@ function createArtifactDefinitions(battleId: string): ArtifactDefinition[] {
       kind: "publication_receipt",
       visibility: "private",
       relativePath: artifactPath(battleId, "private/publication.json"),
+    },
+    {
+      kind: "submissions",
+      visibility: "private",
+      relativePath: artifactPath(battleId, "private/submissions.json"),
+    },
+    {
+      kind: "final_report_json",
+      visibility: "private",
+      relativePath: artifactPath(battleId, "private/report.json"),
+    },
+    {
+      kind: "final_report_markdown",
+      visibility: "private",
+      relativePath: artifactPath(battleId, "private/report.md"),
     },
   ];
 }

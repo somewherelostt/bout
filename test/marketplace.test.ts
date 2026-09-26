@@ -70,6 +70,11 @@ describe("marketplace workflow", () => {
       taskId: resultFixture.taskId,
       txHash: resultFixture.txHash,
     });
+
+    await expect(
+      publishBounty({ workspace, battleId, creator: { create } }),
+    ).rejects.toThrow("is already published as Gibwork task");
+    expect(create).toHaveBeenCalledOnce();
   });
 
   it("rejects a minimum payout larger than the pool", async () => {

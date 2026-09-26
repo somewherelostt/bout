@@ -6,7 +6,7 @@ export function AwardsPage({ snapshot }: { snapshot: WorkspaceSnapshot }) {
   const { stats } = snapshot;
   const milestones: Array<{ icon: ReactNode; name: string; description: string; value: number; target: number }> = [
     { icon: <ShieldCheck />, name: "First pairing", description: "Create one anonymized two-patch bundle.", value: stats.total, target: 1 },
-    { icon: <FileCheck2 />, name: "Clear verdict", description: "Record an evidence-backed patch decision.", value: stats.reviewed, target: 1 },
+    { icon: <FileCheck2 />, name: "Closed loop", description: "Generate a final report from synchronized Gibwork reviews.", value: stats.reported, target: 1 },
     { icon: <Medal />, name: "Repeat judge", description: "Record five completed verdicts.", value: stats.reviewed, target: 5 },
     { icon: <Send />, name: "Into the ring", description: "Publish a prepared review bounty through Gibwork.", value: stats.published, target: 1 },
     { icon: <Trophy />, name: "Ten-round card", description: "Build a workspace with ten real bouts.", value: stats.total, target: 10 },
@@ -25,7 +25,7 @@ export function AwardsPage({ snapshot }: { snapshot: WorkspaceSnapshot }) {
       </header>
 
       <article className="reputation-banner">
-        <div><span className="eyebrow">CURRENT WORKSPACE</span><h2>{stats.reviewed} recorded verdict{stats.reviewed === 1 ? "" : "s"}</h2><p>{stats.total} battle bundles, {stats.prepared} prepared drafts, and {stats.published} published bounties were found on disk.</p></div>
+        <div><span className="eyebrow">CURRENT WORKSPACE</span><h2>{stats.reported} final report{stats.reported === 1 ? "" : "s"}</h2><p>{stats.total} battle bundles, {stats.prepared} prepared drafts, {stats.published} published bounties, and {stats.synced} synchronized review sets were found on disk.</p></div>
         <div className="rank-ring"><span>EARNED</span><strong>{earned}</strong><small>of {milestones.length}</small></div>
       </article>
 

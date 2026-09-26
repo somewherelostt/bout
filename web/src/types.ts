@@ -17,6 +17,17 @@ export interface BoutRecord {
   publicationTaskId: string | null;
   hasBountyDraft: boolean;
   hasPublicationReceipt: boolean;
+  submissionCount: number;
+  validReviewCount: number;
+  report: ReportSummary | null;
+}
+
+export interface ReportSummary {
+  outcome: "A" | "B" | "TIE" | "BOTH_FAILED" | "NO_CONSENSUS";
+  validReviewCount: number;
+  averageConfidence: number | null;
+  resolvedLabel: "A" | "B" | null;
+  generatedAt: string;
 }
 
 export interface PatchRecord {
@@ -55,6 +66,8 @@ export interface WorkspaceStats {
   prepared: number;
   published: number;
   reviewed: number;
+  synced: number;
+  reported: number;
   totalPool: number;
 }
 

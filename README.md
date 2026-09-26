@@ -35,6 +35,26 @@ npm run dev -- battle create \
 
 The command creates `.review-harness/battles/<id>/review`, which contains only anonymous reviewer material. The source-to-label mapping is kept under the battle's separate `private` directory.
 
+## Prepare a reviewer bounty
+
+Generate the exact public payload locally before authorizing any financial action:
+
+```bash
+npm run dev -- bounty prepare <battle-id> --pool 1.00 --min-payout 1.00
+```
+
+Preparation does not access a wallet or spend funds. It writes `bounty-draft.json` into the battle's review directory for inspection.
+
+Publishing is deliberately separate and only supports the stage environment. Stage uses real mainnet USDC. The command requires a local keypair path and an explicit confirmation phrase:
+
+```bash
+npm run dev -- bounty publish <battle-id> \
+  --keypair /absolute/path/to/keypair.json \
+  --confirm-real-funds "I UNDERSTAND STAGE USES REAL USDC"
+```
+
+Never commit a keypair, seed phrase, private key, or populated environment file.
+
 ## Principles
 
 - The same task and verification command apply to both candidates.

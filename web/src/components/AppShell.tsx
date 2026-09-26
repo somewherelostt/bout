@@ -24,9 +24,9 @@ export function AppShell({
       <a className="skip-link" href="#main-workbench">Skip to workspace</a>
       <Sidebar activity={activity} open={navOpen} onOpen={onNavOpen} onClose={onNavClose} />
       <main className="main-canvas" id="main-workbench">
-        <div className="ambient ambient-blue" />
-        <div className="ambient ambient-coral" />
-        <div className="arena-lines" />
+        <div className="ambient ambient-blue" aria-hidden="true" />
+        <div className="ambient ambient-coral" aria-hidden="true" />
+        <div className="arena-lines" aria-hidden="true" />
         <div className="texture-field" aria-hidden="true" />
         <div className="page-content">{children}</div>
         <button className="feedback-button" type="button" onClick={onFeedback}>

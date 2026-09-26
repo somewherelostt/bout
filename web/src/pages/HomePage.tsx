@@ -13,9 +13,10 @@ import type { CreateBoutInput } from "../types";
 
 interface HomePageProps {
   onCreate: (input: CreateBoutInput) => Promise<void>;
+  hostedReadOnly?: boolean;
 }
 
-export function HomePage({ onCreate }: HomePageProps) {
+export function HomePage({ onCreate, hostedReadOnly = false }: HomePageProps) {
   const [prompt, setPrompt] = useState("");
   const [repo, setRepo] = useState("");
   const [verification, setVerification] = useState("");
@@ -72,6 +73,12 @@ export function HomePage({ onCreate }: HomePageProps) {
           <span className="window-controls" aria-hidden="true"><i /><i /><i /></span>
         </div>
         <div className="composer-body">
+        {hostedReadOnly && (
+          <div className="hosted-notice">
+            <ShieldCheck size={16} />
+            <span><strong>Hosted showcase.</strong> Real bundles, wallet signing, and SQLite state run locally through the CLI.</span>
+          </div>
+        )}
         <div className="field-heading">
           <label htmlFor="task-prompt">Task and acceptance criteria</label>
           <span>Saved to task.md</span>
@@ -135,9 +142,9 @@ export function HomePage({ onCreate }: HomePageProps) {
         {error && <div className="form-error">{error}</div>}
 
         <div className="composer-footer">
-          <span>Creates `.bout/battles/&lt;id&gt;` and a review-ready bounty draft.</span>
-          <button className="primary-button" type="submit" disabled={submitting}>
-            {submitting ? <><LoaderCircle className="spin" size={17} /> Creating…</> : <>Create real bout <ArrowRight size={17} /></>}
+          <span>{hostedReadOnly ? "Install and run Bout locally to create real artifacts." : "Creates `.bout/battles/<id>` and a review-ready bounty draft."}</span>
+          <button className="primary-button" type="submit" disabled={submitting || hostedReadOnly}>
+            {hostedReadOnly ? <>Local runtime required <ShieldCheck size={17} /></> : submitting ? <><LoaderCircle className="spin" size={17} /> Creating…</> : <>Create real bout <ArrowRight size={17} /></>}
           </button>
         </div>
         </div>

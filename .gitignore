@@ -5,6 +5,7 @@ coverage/
 .env.*
 !.env.example
 .bout/
+.vercel/
 *.log
 *.tsbuildinfo
 .DS_Store

@@ -8,6 +8,8 @@
     "dev:api": "tsx watch server/index.ts",
     "dev:ui": "vite",
     "build": "tsc --noEmit && vite build",
+    "check": "npm run build && npm run check:server",
+    "check:server": "tsc --noEmit -p tsconfig.server.json",
     "preview": "vite preview",
     "serve:api": "tsx server/index.ts"
   },

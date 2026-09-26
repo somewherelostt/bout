@@ -787,6 +787,23 @@ a {
   font-size: 11px;
 }
 
+.hosted-notice {
+  margin-bottom: 18px;
+  padding: 11px 12px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #263d75;
+  background: #edf3ff;
+  border: 1px solid rgba(38, 61, 117, 0.2);
+  border-radius: 7px;
+  font-size: 10px;
+}
+
+.hosted-notice strong {
+  margin-right: 4px;
+}
+
 .composer-footer {
   margin-top: 22px;
   padding-top: 18px;

@@ -89,7 +89,15 @@ export function App() {
     >
       {error && <div className="sync-warning"><AlertTriangle size={14} /> {error}</div>}
       <Routes>
-        <Route path="/" element={<HomePage onCreate={handleCreate} />} />
+        <Route
+          path="/"
+          element={(
+            <HomePage
+              onCreate={handleCreate}
+              hostedReadOnly={snapshot.storage.persistence === "Read-only"}
+            />
+          )}
+        />
         <Route path="/history" element={<HistoryPage battles={snapshot.battles} />} />
         <Route path="/judge" element={<JudgePage snapshot={snapshot} />} />
         <Route path="/vault" element={<VaultPage snapshot={snapshot} />} />

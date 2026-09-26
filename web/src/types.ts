@@ -80,9 +80,9 @@ export interface WorkspaceSnapshot {
   liveStatus: "connected" | "unconfigured" | "error";
   liveMessage: string;
   storage: {
-    engine: "SQLite";
-    scope: "Current project";
-    persistence: "Local only";
+    engine: string;
+    scope: string;
+    persistence: string;
   };
   stats: WorkspaceStats;
 }

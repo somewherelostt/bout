@@ -14,6 +14,8 @@ Bout is a terminal-first evaluation workflow for code changes. It packages two p
 
 No dashboard is required. Every task, patch, decision, and receipt remains inspectable as a local file. A local SQLite database indexes structured workflow state for reliable queries and metrics without moving source material into hosted storage. An optional local web workspace is included for demonstrating the same workflow visually; the CLI remains the core product and Gibwork integration.
 
+Hosted showcase: [bout-omega.vercel.app](https://bout-omega.vercel.app). The deployment is intentionally read-only and contains no seeded records, wallet credentials, or persistent review state; real workflows run through the local CLI.
+
 ## Why Bout
 
 Automated tests answer whether known expectations pass. They do not reliably determine which implementation is safer, clearer, or more maintainable when both candidates appear correct.

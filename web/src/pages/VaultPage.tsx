@@ -26,7 +26,7 @@ export function VaultPage({ snapshot }: { snapshot: WorkspaceSnapshot }) {
           <div className="connection-row">
             <span className="connection-logo">DB</span>
             <span><strong>{snapshot.storage.scope}</strong><small>{snapshot.stats.total} indexed battle bundles</small></span>
-            <span className="status-pill complete"><Check size={13} /> {snapshot.storage.persistence}</span>
+            <span className={`status-pill ${snapshot.storage.persistence === "Local only" ? "complete" : "draft"}`}><Check size={13} /> {snapshot.storage.persistence}</span>
           </div>
         </article>
 

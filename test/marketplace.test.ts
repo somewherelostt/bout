@@ -127,6 +127,7 @@ describe("marketplace workflow", () => {
         calls += 1;
         await callbacks?.onPrepared({
           intentId: createResult().intentId,
+          taskId: createResult().taskId,
           lastValidBlockHeight: 42,
           paymentQuote: createResult().paymentQuote,
         });
@@ -140,7 +141,11 @@ describe("marketplace workflow", () => {
     const state = await inspectPublicationState(workspace, battleId);
     expect(state).toMatchObject({
       state: "unresolved",
-      record: { status: "prepared", intentId: createResult().intentId },
+      record: {
+        status: "prepared",
+        intentId: createResult().intentId,
+        taskId: createResult().taskId,
+      },
     });
     await expect(publishBounty({ workspace, battleId, creator })).rejects.toThrow(
       "has an unresolved prepared publish attempt",

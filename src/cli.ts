@@ -18,6 +18,7 @@ import {
 import { listIndexedBattles } from "./db/store.js";
 
 const VERSION = "0.1.0";
+const workspaceOrCurrentDirectory = (workspace?: string): string => workspace ?? process.cwd();
 
 const program = new Command()
   .name("bout")
@@ -48,17 +49,17 @@ battle
   .requiredOption("--candidate-one <path>", "First source patch")
   .requiredOption("--candidate-two <path>", "Second source patch")
   .option("--verify <command>", "Verification command recorded for both candidates")
-  .option("--workspace <path>", "Workspace that receives local battle state", process.cwd())
+  .option("--workspace <path>", "Workspace that receives local battle state")
   .action(
     async (options: {
       task: string;
       candidateOne: string;
       candidateTwo: string;
       verify?: string;
-      workspace: string;
+      workspace?: string;
     }) => {
       const result = await createBattle({
-        workspace: options.workspace,
+        workspace: workspaceOrCurrentDirectory(options.workspace),
         taskPath: options.task,
         firstCandidatePath: options.candidateOne,
         secondCandidatePath: options.candidateTwo,
@@ -74,9 +75,9 @@ battle
 battle
   .command("list")
   .description("List local battles and their workflow state.")
-  .option("--workspace <path>", "Workspace containing local battle state", process.cwd())
-  .action(async (options: { workspace: string }) => {
-    const battles = await listIndexedBattles(options.workspace);
+  .option("--workspace <path>", "Workspace containing local battle state")
+  .action(async (options: { workspace?: string }) => {
+    const battles = await listIndexedBattles(workspaceOrCurrentDirectory(options.workspace));
     if (battles.length === 0) {
       process.stdout.write("No local battles found.\n");
       return;
@@ -111,7 +112,7 @@ bounty
   .requiredOption("--min-payout <amount>", "Minimum USDC payout per approved review")
   .option("--deadline <iso-date>", "Optional ISO-8601 deadline")
   .option("--allow-unverified", "Allow submissions from unverified reviewers", false)
-  .option("--workspace <path>", "Workspace containing local battle state", process.cwd())
+  .option("--workspace <path>", "Workspace containing local battle state")
   .action(
     async (
       battleId: string,
@@ -120,11 +121,11 @@ bounty
         minPayout: string;
         deadline?: string;
         allowUnverified: boolean;
-        workspace: string;
+        workspace?: string;
       },
     ) => {
       const { draft, draftPath } = await prepareBountyDraft({
-        workspace: options.workspace,
+        workspace: workspaceOrCurrentDirectory(options.workspace),
         battleId,
         poolAmount: options.pool,
         minimumPayout: options.minPayout,
@@ -153,7 +154,7 @@ bounty
     "--max-total <amount>",
     "Maximum SDK-quoted total USDC debit permitted before signing",
   )
-  .option("--workspace <path>", "Workspace containing local battle state", process.cwd())
+  .option("--workspace <path>", "Workspace containing local battle state")
   .action(
     async (
       battleId: string,
@@ -161,7 +162,7 @@ bounty
         keypair: string;
         confirmRealFunds: string;
         maxTotal: string;
-        workspace: string;
+        workspace?: string;
       },
     ) => {
       if (options.confirmRealFunds !== "I UNDERSTAND STAGE USES REAL USDC") {
@@ -170,7 +171,7 @@ bounty
 
       const creator = await createStageTaskCreator(options.keypair, options.maxTotal);
       const result = await publishBounty({
-        workspace: options.workspace,
+        workspace: workspaceOrCurrentDirectory(options.workspace),
         battleId,
         creator,
       });
@@ -188,9 +189,12 @@ bounty
   .command("publish-status")
   .description("Inspect the durable local state of a confirmed or unresolved publish attempt.")
   .argument("<battle-id>", "Local battle UUID")
-  .option("--workspace <path>", "Workspace containing local battle state", process.cwd())
-  .action(async (battleId: string, options: { workspace: string }) => {
-    const result = await inspectPublicationState(options.workspace, battleId);
+  .option("--workspace <path>", "Workspace containing local battle state")
+  .action(async (battleId: string, options: { workspace?: string }) => {
+    const result = await inspectPublicationState(
+      workspaceOrCurrentDirectory(options.workspace),
+      battleId,
+    );
     if (result.state === "not-started") {
       process.stdout.write("STATUS     not started\n");
       return;
@@ -217,15 +221,15 @@ bounty
   .description("Retrieve creator-visible Gibwork submissions and validate structured reviews.")
   .argument("<battle-id>", "Local battle UUID")
   .requiredOption("--keypair <path>", "Path to the creator wallet keypair file")
-  .option("--workspace <path>", "Workspace containing local battle state", process.cwd())
+  .option("--workspace <path>", "Workspace containing local battle state")
   .action(
     async (
       battleId: string,
-      options: { keypair: string; workspace: string },
+      options: { keypair: string; workspace?: string },
     ) => {
       const lister = await createStageSubmissionLister(options.keypair);
       const { record, submissionsPath } = await syncBountySubmissions({
-        workspace: options.workspace,
+        workspace: workspaceOrCurrentDirectory(options.workspace),
         battleId,
         lister,
       });
@@ -246,10 +250,10 @@ report
   .command("generate")
   .description("Aggregate valid reviews, resolve the source candidate, and export reports.")
   .argument("<battle-id>", "Local battle UUID")
-  .option("--workspace <path>", "Workspace containing local battle state", process.cwd())
-  .action(async (battleId: string, options: { workspace: string }) => {
+  .option("--workspace <path>", "Workspace containing local battle state")
+  .action(async (battleId: string, options: { workspace?: string }) => {
     const result = await generateFinalReport({
-      workspace: options.workspace,
+      workspace: workspaceOrCurrentDirectory(options.workspace),
       battleId,
     });
     process.stdout.write(`OUTCOME    ${result.report.aggregate.outcome}\n`);

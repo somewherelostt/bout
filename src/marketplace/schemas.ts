@@ -129,8 +129,7 @@ export const reviewAggregateSchema = z.object({
   }),
 });
 
-export const finalReportSchema = z.object({
-  schemaVersion: z.literal(1),
+const finalReportFields = {
   battleId: z.uuid(),
   taskId: z.uuid(),
   generatedAt: z.iso.datetime(),
@@ -155,6 +154,17 @@ export const finalReportSchema = z.object({
       verdict: verdictInputSchema,
     }),
   ),
+};
+
+export const legacyFinalReportSchema = z.object({
+  schemaVersion: z.literal(1),
+  ...finalReportFields,
+});
+
+export const finalReportSchema = z.object({
+  schemaVersion: z.literal(2),
+  generationId: z.uuid(),
+  ...finalReportFields,
 });
 
 export type ReviewAggregate = z.infer<typeof reviewAggregateSchema>;

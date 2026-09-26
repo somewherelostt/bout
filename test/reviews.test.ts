@@ -227,6 +227,53 @@ describe("Gibwork review results", () => {
     const regenerated = await generateFinalReport({ workspace, battleId });
     expect(regenerated.report.aggregate.outcome).toBe("NO_CONSENSUS");
   });
+
+  it("indexes a report only when its JSON and Markdown generation match", async () => {
+    const workspace = await createPublishedBattle();
+    await syncBountySubmissions({
+      workspace,
+      battleId,
+      lister: {
+        list: async () => ({
+          results: [sdkSubmission("88888888-8888-4888-8888-888888888888", validReview("A", 5))],
+        }),
+      },
+    });
+    const generated = await generateFinalReport({ workspace, battleId });
+    const markdown = await readFile(generated.markdownPath, "utf8");
+    expect(markdown).toContain(generated.report.generationId);
+
+    await writeFile(
+      generated.markdownPath,
+      markdown.replace(generated.report.generationId, "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"),
+    );
+    const { syncBattleToDatabase } = await import("../src/db/store.js");
+    await syncBattleToDatabase(workspace, battleId);
+
+    const indexed = await listIndexedBattles(workspace);
+    expect(indexed[0]?.report).toBeNull();
+  });
+
+  it("keeps a battle indexed when upgrading a legacy report without a generation marker", async () => {
+    const workspace = await createPublishedBattle();
+    await syncBountySubmissions({
+      workspace,
+      battleId,
+      lister: { list: async () => ({ results: [] }) },
+    });
+    const generated = await generateFinalReport({ workspace, battleId });
+    const legacy = { ...generated.report } as Record<string, unknown>;
+    legacy.schemaVersion = 1;
+    delete legacy.generationId;
+    await writeFile(generated.jsonPath, `${JSON.stringify(legacy, null, 2)}\n`);
+
+    const { reconcileWorkspaceDatabase } = await import("../src/db/store.js");
+    const reconciled = await reconcileWorkspaceDatabase(workspace);
+    expect(reconciled.skipped).toEqual([]);
+    const indexed = await listIndexedBattles(workspace);
+    expect(indexed).toHaveLength(1);
+    expect(indexed[0]?.report).toBeNull();
+  });
 });
 
 async function createPublishedBattle(): Promise<string> {

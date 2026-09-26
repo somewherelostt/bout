@@ -52,11 +52,11 @@ private/
   report.md
 ```
 
-`bounty-draft.json` is safe to inspect before publication. `publication-attempt.json` is an exclusive pre-submit recovery record; it blocks duplicate publication while an intent may be unresolved. `publication.json` is the final commit record and is written only after the external create operation is confirmed.
+`bounty-draft.json` is safe to inspect before publication. `publication-attempt.json` is an exclusive pre-submit recovery record containing the prepared Gibwork task ID and intent; it blocks duplicate publication while an intent may be unresolved. `publication.json` is the final commit record and is written only after the external create operation is confirmed.
 
 `verdict.json` is written only after the local reviewer completes the full structured contract: outcome (`A`, `B`, `TIE`, or `BOTH_FAILED`), confidence, correctness, security, maintainability, evidence, and rationale. Only schema-versioned verdicts count toward evidence metrics; incomplete historical files are left on disk but are not presented as valid results.
 
-`submissions.json` is produced by a creator-authenticated SDK read after publication. It keeps only submission content, state, timestamps, minimal media references, and parsing results; reviewer profiles are discarded. `report.json` and `report.md` contain deterministic vote aggregation and resolve an `A` or `B` consensus through the creator-only identity map. Tied top-level vote counts remain `NO_CONSENSUS`.
+`submissions.json` is produced by a creator-authenticated SDK read after publication. It keeps only submission content, state, timestamps, minimal media references, and parsing results; reviewer profiles are discarded. `report.json` and `report.md` contain deterministic vote aggregation and resolve an `A` or `B` consensus through the creator-only identity map. The JSON report is the commit marker for a generation ID embedded in both files, so an interrupted or mixed pair is never indexed. Legacy version 1 reports remain readable as uncommitted artifacts and can be regenerated. Tied top-level vote counts remain `NO_CONSENSUS`.
 
 The SQLite index contains normalized `battles`, `candidates`, `bounty_drafts`, `publications`, `submission_syncs`, `verdicts`, `reports`, `artifacts`, and `workflow_events` tables. Patch, task, and submission bodies are deliberately excluded. Artifact rows contain paths, sizes, visibility, and SHA-256 digests so files remain inspectable with normal developer tools.
 
@@ -76,7 +76,7 @@ Database migrations are versioned and applied during storage initialization. API
 - Wallet material is read from an explicit file and never persisted.
 - Submission synchronization discards reviewer profile data before persistence.
 - Winner resolution occurs only inside creator-private report artifacts.
-- Replaceable JSON artifacts use same-directory temporary files and atomic renames; a report's JSON record is written only after its Markdown export succeeds.
+- Replaceable JSON artifacts use same-directory temporary files and atomic renames. Report regeneration invalidates the old JSON commit marker first, then commits only a JSON/Markdown pair with the same generation ID.
 - Financial calls are injectable so tests never broadcast transactions.
 
 ## Planned slices

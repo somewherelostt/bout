@@ -4,7 +4,7 @@
 
 Wallet keys are read only from an explicit local file during the publish command. Key contents are never written to battle state, command output, logs, or repository files. Use a dedicated low-balance wallet for testing. Publishing prepares the Gibwork transaction, checks its total debit against the explicit `--max-total` ceiling, and signs only when the quote is within that limit.
 
-Before network submission, Bout atomically claims a per-battle publish attempt and stores the intent, block height, and quote under creator-private state. An ambiguous or non-confirmed response preserves that record and blocks automatic retry. Use `bout bounty publish-status <battle-id>` to inspect it and resolve the intent with Gibwork before taking any further financial action.
+Before network submission, Bout atomically claims a per-battle publish attempt and stores the prepared task ID, intent, block height, and quote under creator-private state. An ambiguous or non-confirmed response preserves that record and blocks automatic retry. Use `bout bounty publish-status <battle-id>` to inspect it and resolve the task with Gibwork before taking any further financial action.
 
 ## Public review material
 

@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { mkdir, rm } from "node:fs/promises";
 import path from "node:path";
 import type {
@@ -79,8 +80,11 @@ export async function syncBountySubmissions(input: {
   const privateDirectory = path.join(battleDirectory, "private");
   await mkdir(privateDirectory, { recursive: true });
   const submissionsPath = path.join(privateDirectory, "submissions.json");
-  await writeJson(submissionsPath, record);
+  // report.json is the commit marker for the report pair. Remove it before the
+  // synchronized input changes so an interrupted resync cannot expose a stale report.
   await rm(path.join(privateDirectory, "report.json"), { force: true });
+  await syncBattleToDatabase(input.workspace, battleId);
+  await writeJson(submissionsPath, record);
   await rm(path.join(privateDirectory, "report.md"), { force: true });
   await syncBattleToDatabase(input.workspace, battleId);
   return { record, submissionsPath };
@@ -182,7 +186,8 @@ export async function generateFinalReport(input: {
     ? identityMap.candidates.find((candidate) => candidate.assignedLabel === aggregate.outcome) ?? null
     : null;
   const report = finalReportSchema.parse({
-    schemaVersion: 1,
+    schemaVersion: 2,
+    generationId: randomUUID(),
     battleId,
     taskId: sync.taskId,
     generatedAt: (input.now ?? (() => new Date()))().toISOString(),
@@ -209,6 +214,10 @@ export async function generateFinalReport(input: {
   await mkdir(privateDirectory, { recursive: true });
   const jsonPath = path.join(privateDirectory, "report.json");
   const markdownPath = path.join(privateDirectory, "report.md");
+  // The JSON file commits a matching JSON/Markdown generation. Removing the old
+  // marker first means a crash can leave an incomplete pair, never a trusted mixed pair.
+  await rm(jsonPath, { force: true });
+  await syncBattleToDatabase(input.workspace, battleId);
   await writeText(markdownPath, renderMarkdownReport(report));
   await writeJson(jsonPath, report);
   await syncBattleToDatabase(input.workspace, battleId);
@@ -306,6 +315,8 @@ function renderMarkdownReport(report: FinalReport): string {
     ].join("\n")).join("\n\n");
 
   return [
+    `<!-- bout-report-generation:${report.generationId} -->`,
+    "",
     "# Bout final report",
     "",
     `- Battle: \`${report.battleId}\``,

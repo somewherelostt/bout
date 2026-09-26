@@ -15,8 +15,10 @@ import {
   bountyDraftSchema,
   decimalToMicros,
   finalReportSchema,
+  legacyFinalReportSchema,
   publicationRecordSchema,
   submissionSyncSchema,
+  type FinalReport,
 } from "../marketplace/schemas.js";
 import { applyMigrations } from "./migrations.js";
 import {
@@ -114,7 +116,8 @@ export async function syncBattleToDatabase(workspace: string, battleIdInput: str
     publication,
     verdict,
     submissionSync,
-    report,
+    reportCandidate,
+    reportMarkdown,
   ] =
     await Promise.all([
       readJson(path.join(reviewDirectory, "manifest.json"), reviewManifestSchema),
@@ -131,10 +134,8 @@ export async function syncBattleToDatabase(workspace: string, battleIdInput: str
         path.join(battleDirectory, "private", "submissions.json"),
         submissionSyncSchema,
       ),
-      readOptionalJson(
-        path.join(battleDirectory, "private", "report.json"),
-        finalReportSchema,
-      ),
+      readOptionalReport(path.join(battleDirectory, "private", "report.json")),
+      readOptionalBuffer(path.join(battleDirectory, "private", "report.md")),
     ]);
 
   if (manifest.battleId !== validatedBattleId) {
@@ -145,19 +146,21 @@ export async function syncBattleToDatabase(workspace: string, battleIdInput: str
   if (submissionSync && publication?.taskId !== submissionSync.taskId) {
     throw new Error("Synced submissions do not match the published Gibwork task.");
   }
-  if (
-    report &&
-    (report.taskId !== submissionSync?.taskId ||
-      report.battleId !== validatedBattleId ||
-      report.submissionsSyncedAt !== submissionSync?.syncedAt)
-  ) {
-    throw new Error("The final report does not match this battle and submission sync.");
-  }
+  const report = isCommittedReport(
+    reportCandidate,
+    reportMarkdown?.toString("utf8") ?? null,
+    submissionSync,
+    validatedBattleId,
+  )
+    ? reportCandidate
+    : null;
 
   const task = taskBuffer.toString("utf8");
   const updatedAt = new Date().toISOString();
   const battleId = validatedBattleId;
-  const artifactDefinitions = createArtifactDefinitions(battleId);
+  const artifactDefinitions = createArtifactDefinitions(battleId).filter(
+    (definition) => report !== null || !definition.kind.startsWith("final_report_"),
+  );
   const indexedArtifacts = (
     await Promise.all(
       artifactDefinitions.map(async (definition): Promise<IndexedArtifact | null> => {
@@ -752,6 +755,34 @@ async function readOptionalBuffer(filePath: string): Promise<Buffer | null> {
     if (isMissingFile(error)) return null;
     throw error;
   }
+}
+
+function isCommittedReport(
+  report: FinalReport | null,
+  markdown: string | null,
+  submissionSync: ReturnType<typeof submissionSyncSchema.parse> | null,
+  battleId: string,
+): boolean {
+  if (!report || !markdown || !submissionSync) return false;
+  return report.taskId === submissionSync.taskId &&
+    report.battleId === battleId &&
+    report.submissionsSyncedAt === submissionSync.syncedAt &&
+    markdown.startsWith(`<!-- bout-report-generation:${report.generationId} -->\n`);
+}
+
+async function readOptionalReport(filePath: string): Promise<FinalReport | null> {
+  let value: unknown;
+  try {
+    value = JSON.parse(await readFile(filePath, "utf8"));
+  } catch (error) {
+    if (isMissingFile(error)) return null;
+    throw error;
+  }
+
+  const current = finalReportSchema.safeParse(value);
+  if (current.success) return current.data;
+  if (legacyFinalReportSchema.safeParse(value).success) return null;
+  throw current.error;
 }
 
 function isMissingFile(error: unknown): boolean {

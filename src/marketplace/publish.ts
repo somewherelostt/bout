@@ -22,6 +22,7 @@ import {
 
 export interface PreparedTaskContext {
   intentId: string;
+  taskId: string;
   lastValidBlockHeight: number;
   paymentQuote: CreateTaskResult["paymentQuote"];
 }
@@ -84,6 +85,7 @@ export async function publishBounty(input: PublishBountyInput): Promise<{
           battleId,
           environment: "stage",
           intentId: context.intentId,
+          taskId: context.taskId,
           lastValidBlockHeight: context.lastValidBlockHeight,
           paymentQuote: toPaymentQuoteRecord(context.paymentQuote),
           status: "prepared",
@@ -178,6 +180,7 @@ export async function createStageTaskCreator(
       );
       await callbacks?.onPrepared({
         intentId: prepared.intentId,
+        taskId: prepared.taskId,
         lastValidBlockHeight: prepared.lastValidBlockHeight,
         paymentQuote: prepared.paymentQuote,
       });

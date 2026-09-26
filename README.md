@@ -180,10 +180,11 @@ Publishing is a separate, explicitly gated action:
 ```bash
 bout bounty publish <battle-id> \
   --keypair /absolute/path/to/keypair.json \
+  --max-total 1.00 \
   --confirm-real-funds "I UNDERSTAND STAGE USES REAL USDC"
 ```
 
-Bout refuses to publish unless the confirmation phrase matches exactly. Wallet material is read from the supplied file, used locally for signing, and never written into battle state or command output.
+Bout refuses to publish unless the confirmation phrase matches exactly. It prepares the SDK transaction first and refuses to sign when Gibwork's quoted total debit exceeds `--max-total`. Wallet material is read from the supplied file, used locally for signing, and never written into battle state or command output.
 
 ## Synchronize reviews and generate the result
 

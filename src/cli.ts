@@ -141,17 +141,26 @@ bounty
     "--confirm-real-funds <confirmation>",
     'Must be exactly "I UNDERSTAND STAGE USES REAL USDC"',
   )
+  .requiredOption(
+    "--max-total <amount>",
+    "Maximum SDK-quoted total USDC debit permitted before signing",
+  )
   .option("--workspace <path>", "Workspace containing local battle state", process.cwd())
   .action(
     async (
       battleId: string,
-      options: { keypair: string; confirmRealFunds: string; workspace: string },
+      options: {
+        keypair: string;
+        confirmRealFunds: string;
+        maxTotal: string;
+        workspace: string;
+      },
     ) => {
       if (options.confirmRealFunds !== "I UNDERSTAND STAGE USES REAL USDC") {
         throw new Error("Refusing to publish without the exact real-funds confirmation phrase.");
       }
 
-      const creator = await createStageTaskCreator(options.keypair);
+      const creator = await createStageTaskCreator(options.keypair, options.maxTotal);
       const result = await publishBounty({
         workspace: options.workspace,
         battleId,
@@ -159,6 +168,7 @@ bounty
       });
       process.stdout.write(`PUBLISHED  ${result.taskId}\n`);
       process.stdout.write("NETWORK    stage\n");
+      if (result.totalDebit) process.stdout.write(`DEBIT      ${result.totalDebit} USDC\n`);
       process.stdout.write(`RECORD     ${result.publicationPath}\n`);
       if (result.indexWarning) {
         process.stderr.write(`WARNING    ${result.indexWarning}\n`);

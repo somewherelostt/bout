@@ -144,7 +144,12 @@ async function createPublishedBattle(): Promise<string> {
         txHash: "test-transaction",
         lastValidBlockHeight: 1,
         status: "confirmed",
-        paymentQuote: {},
+        paymentQuote: {
+          token: { mintAddress: "mint", symbol: "USDC", decimals: 6 },
+          fundingAmount: "2.00",
+          platformFee: { percent: 0, amount: "0.00" },
+          totalDebit: "2.00",
+        },
       }) as CreateTaskResult,
     },
   });

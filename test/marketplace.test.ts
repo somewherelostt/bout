@@ -5,7 +5,7 @@ import type { CreateTaskResult } from "@gibwork/sdk";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createBattle } from "../src/core/battle.js";
 import { prepareBountyDraft } from "../src/marketplace/draft.js";
-import { publishBounty } from "../src/marketplace/publish.js";
+import { assertAuthorizedTotal, publishBounty } from "../src/marketplace/publish.js";
 
 const temporaryDirectories: string[] = [];
 const battleId = "22222222-2222-4222-8222-222222222222";
@@ -48,12 +48,12 @@ describe("marketplace workflow", () => {
       txHash: "example-transaction-hash",
       lastValidBlockHeight: 1,
       paymentQuote: {
-        asset: { mintAddress: "mint", symbol: "USDC", decimals: 6 },
-        subtotal: "1.00",
-        platformFee: "0.00",
-        total: "1.00",
+        token: { mintAddress: "mint", symbol: "USDC", decimals: 6 },
+        fundingAmount: "1.00",
+        platformFee: { percent: 0, amount: "0.00" },
+        totalDebit: "1.00",
       },
-      status: "CREATED",
+      status: "confirmed",
     } as unknown as CreateTaskResult;
     const create = vi.fn().mockResolvedValue(resultFixture);
 
@@ -69,6 +69,7 @@ describe("marketplace workflow", () => {
       environment: "stage",
       taskId: resultFixture.taskId,
       txHash: resultFixture.txHash,
+      paymentQuote: { totalDebit: "1.00" },
     });
 
     await expect(
@@ -88,6 +89,13 @@ describe("marketplace workflow", () => {
         minimumPayout: "2.00",
       }),
     ).rejects.toThrow("Minimum payout cannot exceed the total bounty pool");
+  });
+
+  it("refuses an SDK quote above the authorized total before signing", () => {
+    expect(() => assertAuthorizedTotal("1.01", "1.00")).toThrow(
+      "exceeds the authorized maximum of 1.00. Nothing was signed",
+    );
+    expect(() => assertAuthorizedTotal("1.00", "1.00")).not.toThrow();
   });
 });
 

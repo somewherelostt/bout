@@ -70,6 +70,7 @@ Database migrations are versioned and applied during storage initialization. API
 - Draft preparation performs no network or wallet operation.
 - The current publisher is stage-only.
 - Real-fund publishing requires an exact confirmation phrase.
+- The SDK quote is checked against a caller-supplied maximum total debit before signing.
 - Wallet material is read from an explicit file and never persisted.
 - Submission synchronization discards reviewer profile data before persistence.
 - Winner resolution occurs only inside creator-private report artifacts.

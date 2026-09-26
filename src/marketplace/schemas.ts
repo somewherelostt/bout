@@ -35,6 +35,17 @@ export const publicationRecordSchema = z.object({
   taskId: z.uuid(),
   intentId: z.uuid(),
   txHash: z.string().min(1),
+  paymentQuote: z
+    .object({
+      symbol: z.string().min(1),
+      mintAddress: z.string().min(1),
+      fundingAmount: decimalAmountSchema,
+      platformFeeAmount: z
+        .string()
+        .regex(/^(?:0|[1-9]\d*)(?:\.\d{1,6})?$/u, "expected a decimal with at most 6 places"),
+      totalDebit: decimalAmountSchema,
+    })
+    .optional(),
   publishedAt: z.iso.datetime(),
 });
 

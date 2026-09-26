@@ -2,7 +2,7 @@
 
 ## Wallet material
 
-Wallet keys are read only from an explicit local file during the publish command. Key contents are never written to battle state, command output, logs, or repository files. Use a dedicated low-balance wallet for testing.
+Wallet keys are read only from an explicit local file during the publish command. Key contents are never written to battle state, command output, logs, or repository files. Use a dedicated low-balance wallet for testing. Publishing prepares the Gibwork transaction, checks its total debit against the explicit `--max-total` ceiling, and signs only when the quote is within that limit.
 
 ## Public review material
 

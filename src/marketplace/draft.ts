@@ -4,33 +4,16 @@ import type { CreateTaskInput } from "@gibwork/sdk";
 import { z } from "zod";
 import { readJson, writeJson } from "../core/json.js";
 import { reviewManifestSchema } from "../core/schemas.js";
+import { syncBattleToDatabase } from "../db/store.js";
+import {
+  bountyDraftSchema,
+  decimalAmountSchema,
+  decimalToMicros,
+  USDC_MINT_ADDRESS,
+  type BountyDraft,
+} from "./schemas.js";
 
-const USDC_MINT_ADDRESS = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
-
-const decimalAmountSchema = z
-  .string()
-  .regex(/^(?:0|[1-9]\d*)(?:\.\d{1,6})?$/u, "expected a positive decimal with at most 6 places")
-  .refine((value) => decimalToMicros(value) > 0n, "amount must be greater than zero");
-
-export const bountyDraftSchema = z.object({
-  schemaVersion: z.literal(1),
-  battleId: z.uuid(),
-  environment: z.literal("stage"),
-  task: z.object({
-    title: z.string().min(1).max(160),
-    content: z.string().min(1),
-    tags: z.array(z.string().min(1)).min(1),
-    payment: z.object({
-      mintAddress: z.literal(USDC_MINT_ADDRESS),
-      amount: decimalAmountSchema,
-    }),
-    minSubmissionAmount: decimalAmountSchema,
-    deadline: z.iso.datetime().nullable(),
-    allowOnlyVerifiedSubmissions: z.boolean(),
-  }),
-});
-
-export type BountyDraft = z.infer<typeof bountyDraftSchema>;
+export { bountyDraftSchema, type BountyDraft } from "./schemas.js";
 
 export interface PrepareBountyDraftInput {
   workspace: string;
@@ -93,6 +76,7 @@ export async function prepareBountyDraft(input: PrepareBountyDraftInput): Promis
 
   const draftPath = path.join(reviewDirectory, "bounty-draft.json");
   await writeJson(draftPath, draft);
+  await syncBattleToDatabase(input.workspace, input.battleId);
   return { draft, draftPath };
 }
 
@@ -156,9 +140,4 @@ function escapeHtml(value: string): string {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
-}
-
-function decimalToMicros(value: string): bigint {
-  const [whole = "0", fraction = ""] = value.split(".");
-  return BigInt(whole) * 1_000_000n + BigInt(fraction.padEnd(6, "0"));
 }

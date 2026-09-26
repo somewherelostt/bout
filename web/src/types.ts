@@ -65,6 +65,11 @@ export interface WorkspaceSnapshot {
   liveStatus: "connected" | "unconfigured" | "error";
   liveMessage: string;
   workspacePath: string;
+  storage: {
+    engine: "SQLite";
+    databasePath: string;
+    artifactRoot: string;
+  };
   stats: WorkspaceStats;
 }
 

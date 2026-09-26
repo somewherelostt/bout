@@ -1,6 +1,7 @@
 import { randomInt, randomUUID } from "node:crypto";
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { syncBattleToDatabase } from "../db/store.js";
 import { sha256 } from "./hash.js";
 import {
   identityMapSchema,
@@ -128,6 +129,7 @@ export async function createBattle(
     ]);
 
     await rename(temporaryDirectory, battleDirectory);
+    await syncBattleToDatabase(input.workspace, battleId);
   } catch (error) {
     await rm(temporaryDirectory, { recursive: true, force: true });
     throw error;

@@ -130,6 +130,9 @@ bounty
       process.stdout.write(`PUBLISHED  ${result.taskId}\n`);
       process.stdout.write("NETWORK    stage\n");
       process.stdout.write(`RECORD     ${result.publicationPath}\n`);
+      if (result.indexWarning) {
+        process.stderr.write(`WARNING    ${result.indexWarning}\n`);
+      }
     },
   );
 

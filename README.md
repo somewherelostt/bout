@@ -12,7 +12,7 @@ Turn two candidate patches into one evidence-backed human verdict—without reve
 
 Bout is a terminal-first evaluation workflow for code changes. It packages two patches against the same task, randomizes their reviewer-facing identities, records tamper-evident hashes, and prepares a paid review bounty with a strict response contract.
 
-No dashboard is required. Every task, patch, decision, and receipt remains inspectable as a local file. An optional local web workspace is included for demonstrating the same workflow visually; the CLI remains the core product and Gibwork integration.
+No dashboard is required. Every task, patch, decision, and receipt remains inspectable as a local file. A local SQLite database indexes structured workflow state for reliable queries and metrics without moving source material into hosted storage. An optional local web workspace is included for demonstrating the same workflow visually; the CLI remains the core product and Gibwork integration.
 
 ## Why Bout
 
@@ -48,6 +48,8 @@ The same task and verification command apply to both candidates. Original source
 | Guarded stage publishing | Ready |
 | Responsive local web workspace | Ready |
 | Structured four-way verdict capture | Ready |
+| Transactional SQLite workspace index | Ready |
+| Automatic legacy artifact migration | Ready |
 | Submission retrieval and verdict aggregation | Next |
 | Final Markdown and JSON reports | Next |
 
@@ -71,6 +73,7 @@ Expected result:
 
 ```text
 PASS  Node.js  v22+
+PASS  SQLite   3.x
 PASS  Git      git version ...
 ```
 
@@ -83,7 +86,7 @@ npm install --prefix web
 npm run dev:web
 ```
 
-Open `http://localhost:4173`. The workspace includes the bout composer, history, judge queue, vault, evidence report, method, security posture, awards, and blind comparison flow. It reads and writes real `.bout` workspace artifacts through a local API; there is no seeded browser dataset.
+Open `http://localhost:4173`. The workspace includes the bout composer, history, judge queue, vault, evidence report, method, security posture, awards, and blind comparison flow. It reads and writes the real local SQLite index and `.bout` workspace artifacts through a local API; there is no seeded browser dataset.
 
 The composer creates a real anonymized battle bundle and prepares its Gibwork bounty draft. It does not publish the draft or move funds. To read live code-review bounties into the judge queue, provide `SOLANA_PRIVATE_KEY` only to the local API process before starting the workspace. The key is never returned to browser code.
 
@@ -111,20 +114,33 @@ bout battle create \
   --verify "npm test"
 ```
 
-Bout returns a battle UUID and creates an isolated local record:
+Bout returns a battle UUID, indexes its structured metadata in `.bout/bout.sqlite`, and creates an isolated artifact bundle:
 
 ```text
-.bout/battles/<battle-id>/
-├── review/
-│   ├── task.md
-│   ├── candidate-a.patch
-│   ├── candidate-b.patch
-│   └── manifest.json
-└── private/
-    └── identity-map.json
+.bout/
+├── bout.sqlite
+└── battles/<battle-id>/
+    ├── review/
+    │   ├── task.md
+    │   ├── candidate-a.patch
+    │   ├── candidate-b.patch
+    │   └── manifest.json
+    └── private/
+        └── identity-map.json
 ```
 
 Only the `review` directory belongs in reviewer-facing material. The `private` directory contains the source-to-label mapping and must remain local.
+
+### Storage model
+
+Bout uses hybrid local persistence:
+
+- SQLite stores battles, candidate metadata, bounty drafts, publication receipts, verdicts, artifact hashes, and an append-only workflow event index.
+- Original task documents, patches, manifests, verdict exports, and private receipts remain ordinary files under `.bout/battles`.
+- The SQLite index stores artifact paths, byte sizes, and SHA-256 hashes—not patch bodies.
+- Existing file-only workspaces are imported idempotently when the local API starts.
+
+SQLite runs with foreign-key enforcement, write-ahead logging, and versioned in-process migrations. Deleting `.bout/bout.sqlite` does not delete the artifact bundles; restarting the API rebuilds the index from valid bundles.
 
 ## Prepare the paid review
 

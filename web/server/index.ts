@@ -1,11 +1,21 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createGibworkClient } from "@gibwork/sdk/node";
 import { z } from "zod";
 import { createBattle } from "../../src/core/battle.js";
+import { sha256 } from "../../src/core/hash.js";
+import { verdictInputSchema } from "../../src/core/schemas.js";
+import { saveVerdict } from "../../src/core/verdict.js";
+import {
+  getBoutArtifactRoot,
+  getBoutDatabasePath,
+  listIndexedBattles,
+  reconcileWorkspaceDatabase,
+  type IndexedBattle,
+} from "../../src/db/store.js";
 import { prepareBountyDraft } from "../../src/marketplace/draft.js";
 import type {
   BoutRecord,
@@ -29,25 +39,18 @@ const createBoutSchema = z.object({
   deadline: z.iso.datetime().optional(),
 });
 
-const verdictInputSchema = z.object({
-  winner: z.enum(["A", "B", "TIE", "BOTH_FAILED"]),
-  confidence: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]),
-  correctness: z.string().trim().min(1).max(20_000),
-  security: z.string().trim().min(1).max(20_000),
-  maintainability: z.string().trim().min(1).max(20_000),
-  evidence: z.array(z.string().trim().min(1).max(2_000)).min(1).max(50),
-  rationale: z.string().trim().min(1).max(20_000),
-});
-
-const verdictRecordSchema = verdictInputSchema.extend({
-  schemaVersion: z.literal(1),
-  submittedAt: z.iso.datetime(),
-});
-
 const server = createServer(async (request, response) => {
   try {
     if (request.method === "GET" && request.url === "/api/health") {
-      return sendJson(response, 200, { ok: true, workspace });
+      return sendJson(response, 200, {
+        ok: true,
+        workspace,
+        storage: {
+          engine: "sqlite",
+          databasePath: getBoutDatabasePath(workspace),
+          artifactRoot: getBoutArtifactRoot(workspace),
+        },
+      });
     }
 
     if (request.method === "GET" && request.url === "/api/workspace") {
@@ -109,13 +112,11 @@ const server = createServer(async (request, response) => {
     if (request.method === "POST" && verdictMatch) {
       const battleId = z.uuid().parse(decodeURIComponent(verdictMatch[1]));
       const input = verdictInputSchema.parse(await readJsonBody(request));
-      const record = verdictRecordSchema.parse({
-        ...input,
-        schemaVersion: 1,
-        submittedAt: new Date().toISOString(),
+      const record = await saveVerdict({
+        workspace,
+        battleId,
+        verdict: input,
       });
-      const verdictPath = path.resolve(workspace, ".bout", "battles", battleId, "review", "verdict.json");
-      await writeFile(verdictPath, `${JSON.stringify(record, null, 2)}\n`, "utf8");
       return sendJson(response, 200, record);
     }
 
@@ -126,108 +127,81 @@ const server = createServer(async (request, response) => {
   }
 });
 
-server.listen(port, "127.0.0.1", () => {
-  process.stdout.write(`Bout API listening on http://127.0.0.1:${port}\n`);
-  process.stdout.write(`Workspace: ${workspace}\n`);
-});
-
 async function loadWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
-  const battlesDirectory = path.resolve(workspace, ".bout", "battles");
-  let directoryNames: string[] = [];
-  try {
-    directoryNames = (await readdir(battlesDirectory, { withFileTypes: true }))
-      .filter((entry) => entry.isDirectory() && !entry.name.startsWith(".creating-"))
-      .map((entry) => entry.name);
-  } catch (error) {
-    if (!isMissingFile(error)) throw error;
-  }
-
-  const battles = (await Promise.all(directoryNames.map(loadBattle))).filter(
+  const indexedBattles = await listIndexedBattles(workspace);
+  const battleRecords = (await Promise.all(indexedBattles.map(loadBattle))).filter(
     (battle): battle is BoutRecord => battle !== null,
   );
-  battles.sort((left, right) => right.createdAt.localeCompare(left.createdAt));
 
   const live = await loadLiveBounties();
   const stats = {
-    total: battles.length,
-    prepared: battles.filter((battle) => battle.hasBountyDraft).length,
-    published: battles.filter((battle) => battle.hasPublicationReceipt).length,
-    reviewed: battles.filter((battle) => battle.verdict !== null).length,
-    totalPool: battles.reduce((sum, battle) => sum + battle.reward, 0),
+    total: battleRecords.length,
+    prepared: battleRecords.filter((battle) => battle.hasBountyDraft).length,
+    published: battleRecords.filter((battle) => battle.hasPublicationReceipt).length,
+    reviewed: battleRecords.filter((battle) => battle.verdict !== null).length,
+    totalPool: battleRecords.reduce((sum, battle) => sum + battle.reward, 0),
   };
 
   return {
     generatedAt: new Date().toISOString(),
-    battles,
+    battles: battleRecords,
     liveBounties: live.items,
     liveStatus: live.status,
     liveMessage: live.message,
     workspacePath: workspace,
+    storage: {
+      engine: "SQLite",
+      databasePath: getBoutDatabasePath(workspace),
+      artifactRoot: getBoutArtifactRoot(workspace),
+    },
     stats,
   };
 }
 
-async function loadBattle(battleId: string): Promise<BoutRecord | null> {
-  const battleDirectory = path.resolve(workspace, ".bout", "battles", battleId);
-  const reviewDirectory = path.join(battleDirectory, "review");
+async function loadBattle(indexed: IndexedBattle): Promise<BoutRecord | null> {
   try {
-    const [manifest, task, candidateA, candidateB, draft, publication, verdict] = await Promise.all([
-      readJsonFile<Record<string, unknown>>(path.join(reviewDirectory, "manifest.json")),
-      readFile(path.join(reviewDirectory, "task.md"), "utf8"),
-      readFile(path.join(reviewDirectory, "candidate-a.patch"), "utf8"),
-      readFile(path.join(reviewDirectory, "candidate-b.patch"), "utf8"),
-      readOptionalJson(path.join(reviewDirectory, "bounty-draft.json")),
-      readOptionalJson(path.join(battleDirectory, "private", "publication.json")),
-      readOptionalJson(path.join(reviewDirectory, "verdict.json")),
+    const [task, candidateA, candidateB] = await Promise.all([
+      readFile(path.resolve(workspace, indexed.taskPath), "utf8"),
+      readFile(path.resolve(workspace, indexed.candidateA.artifactPath), "utf8"),
+      readFile(path.resolve(workspace, indexed.candidateB.artifactPath), "utf8"),
     ]);
-
-    const typedManifest = manifest as {
-      createdAt?: string;
-      verification?: { command?: string | null };
-      candidates?: Array<{ sha256?: string }>;
-    };
-    const typedDraft = draft as {
-      task?: {
-        title?: string;
-        deadline?: string | null;
-        payment?: { amount?: string };
-        minSubmissionAmount?: string;
-      };
-    } | null;
-    const typedPublication = publication as { taskId?: string } | null;
-    const parsedVerdict = verdict ? verdictRecordSchema.safeParse(verdict) : null;
-    const repoLine = task.split(/\r?\n/u).find((line) => line.startsWith("Repository: "));
+    if (sha256(candidateA) !== indexed.candidateA.sha256) {
+      throw new Error(`Candidate A for ${indexed.id} does not match its indexed hash.`);
+    }
+    if (sha256(candidateB) !== indexed.candidateB.sha256) {
+      throw new Error(`Candidate B for ${indexed.id} does not match its indexed hash.`);
+    }
     const cleanTask = task
       .split(/\r?\n/u)
       .filter((line) => !line.startsWith("Repository: "))
       .join("\n")
       .trim();
 
-    const status: BoutRecord["status"] = parsedVerdict?.success
+    const status: BoutRecord["status"] = indexed.verdict
       ? "Complete"
-      : publication
+      : indexed.hasPublicationReceipt
         ? "Published"
-        : draft
+        : indexed.hasBountyDraft
           ? "Prepared"
           : "Draft";
 
     return {
-      id: battleId,
-      title: (typedDraft?.task?.title ?? extractTitle(task)).replace(/^Blind code review:\s*/iu, ""),
-      repo: repoLine?.slice("Repository: ".length).trim() || "Not recorded",
-      reward: Number(typedDraft?.task?.payment?.amount ?? 0),
-      minimumPayout: Number(typedDraft?.task?.minSubmissionAmount ?? 0),
-      createdAt: typedManifest.createdAt ?? new Date(0).toISOString(),
-      deadline: typedDraft?.task?.deadline ?? null,
+      id: indexed.id,
+      title: indexed.title,
+      repo: indexed.repository,
+      reward: indexed.rewardMicros / 1_000_000,
+      minimumPayout: indexed.minimumPayoutMicros / 1_000_000,
+      createdAt: indexed.createdAt,
+      deadline: indexed.deadline,
       status,
       task: cleanTask,
-      verificationCommand: typedManifest.verification?.command ?? null,
-      patchA: buildPatch(candidateA, typedManifest.candidates?.[0]?.sha256 ?? ""),
-      patchB: buildPatch(candidateB, typedManifest.candidates?.[1]?.sha256 ?? ""),
-      verdict: parsedVerdict?.success ? parsedVerdict.data : null,
-      publicationTaskId: typedPublication?.taskId ?? null,
-      hasBountyDraft: draft !== null,
-      hasPublicationReceipt: publication !== null,
+      verificationCommand: indexed.verificationCommand,
+      patchA: { content: candidateA, ...withoutPathAndLabel(indexed.candidateA) },
+      patchB: { content: candidateB, ...withoutPathAndLabel(indexed.candidateB) },
+      verdict: indexed.verdict,
+      publicationTaskId: indexed.publicationTaskId,
+      hasBountyDraft: indexed.hasBountyDraft,
+      hasPublicationReceipt: indexed.hasPublicationReceipt,
     };
   } catch {
     return null;
@@ -283,14 +257,12 @@ async function loadLiveBounties(): Promise<{
   }
 }
 
-function buildPatch(content: string, sha256: string): BoutRecord["patchA"] {
-  const lines = content.split(/\r?\n/u);
+function withoutPathAndLabel(candidate: IndexedBattle["candidateA"]): Omit<BoutRecord["patchA"], "content"> {
   return {
-    content,
-    sha256,
-    additions: lines.filter((line) => line.startsWith("+") && !line.startsWith("+++")).length,
-    deletions: lines.filter((line) => line.startsWith("-") && !line.startsWith("---")).length,
-    files: Math.max(1, lines.filter((line) => line.startsWith("diff --git ")).length),
+    sha256: candidate.sha256,
+    additions: candidate.additions,
+    deletions: candidate.deletions,
+    files: candidate.files,
   };
 }
 
@@ -318,23 +290,6 @@ async function readJsonBody(request: IncomingMessage): Promise<unknown> {
   return JSON.parse(Buffer.concat(chunks).toString("utf8"));
 }
 
-async function readJsonFile<T>(filePath: string): Promise<T> {
-  return JSON.parse(await readFile(filePath, "utf8")) as T;
-}
-
-async function readOptionalJson(filePath: string): Promise<unknown | null> {
-  try {
-    return await readJsonFile(filePath);
-  } catch (error) {
-    if (isMissingFile(error)) return null;
-    throw error;
-  }
-}
-
-function isMissingFile(error: unknown): boolean {
-  return typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT";
-}
-
 function sendJson(response: ServerResponse, status: number, value: unknown): void {
   const payload = JSON.stringify(value);
   response.writeHead(status, {
@@ -344,3 +299,25 @@ function sendJson(response: ServerResponse, status: number, value: unknown): voi
   });
   response.end(payload);
 }
+
+async function startServer(): Promise<void> {
+  const reconciliation = await reconcileWorkspaceDatabase(workspace);
+  if (reconciliation.skipped.length > 0) {
+    for (const skipped of reconciliation.skipped) {
+      process.stderr.write(`Skipped legacy battle ${skipped.battleId}: ${skipped.reason}\n`);
+    }
+  }
+
+  server.listen(port, "127.0.0.1", () => {
+    process.stdout.write(`Bout API listening on http://127.0.0.1:${port}\n`);
+    process.stdout.write(`Workspace: ${workspace}\n`);
+    process.stdout.write(`Database: ${getBoutDatabasePath(workspace)}\n`);
+    process.stdout.write(`Indexed: ${reconciliation.imported} battle(s)\n`);
+  });
+}
+
+void startServer().catch((error: unknown) => {
+  const message = error instanceof Error ? error.message : String(error);
+  process.stderr.write(`Unable to initialize Bout storage: ${message}\n`);
+  process.exitCode = 1;
+});

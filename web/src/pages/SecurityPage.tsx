@@ -4,7 +4,8 @@ import type { WorkspaceSnapshot } from "../types";
 export function SecurityPage({ snapshot }: { snapshot: WorkspaceSnapshot }) {
   const controls = [
     ["Candidate equality guard", "Identical candidate hashes are rejected before a battle directory is committed."],
-    ["Atomic local writes", "Battle files are assembled in a temporary directory and renamed into place only after every write succeeds."],
+    ["Atomic local writes", "Battle files are assembled in a temporary directory and renamed into place only after every artifact write succeeds."],
+    ["Transactional metadata", "Structured battle, bounty, publication, and verdict metadata is committed through SQLite transactions."],
     ["Split visibility", "Reviewer material and creator-only identity state live in separate directories."],
     ["Server-side wallet boundary", "The browser receives connection status, never the configured private key."],
     ["Explicit money gate", "Publishing requires a dedicated CLI command and an exact real-funds confirmation phrase."],
@@ -25,8 +26,8 @@ export function SecurityPage({ snapshot }: { snapshot: WorkspaceSnapshot }) {
         <article className="security-feature">
           <HardDrive size={22} />
           <span className="eyebrow">LOCAL TRUST BOUNDARY</span>
-          <h2>Files remain under your workspace.</h2>
-          <p>Bout reads battle records from this exact path. The web interface has no hosted database and no seeded browser cache.</p>
+          <h2>State remains under your workspace.</h2>
+          <p>Bout uses a local SQLite index plus readable artifacts. There is no hosted database and no seeded browser cache.</p>
           <code>{snapshot.workspacePath}</code>
         </article>
         <article className="security-feature">

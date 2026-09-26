@@ -20,15 +20,16 @@ export function VaultPage({ snapshot }: { snapshot: WorkspaceSnapshot }) {
           <div className="card-icon"><HardDrive size={20} /></div>
           <div>
             <span className="eyebrow">BOUT WORKSPACE</span>
-            <h2>Local battle storage</h2>
-            <p>Every visible record is loaded from manifests and artifacts under this workspace.</p>
+            <h2>Hybrid local storage</h2>
+            <p>SQLite indexes structured state while original patches and reports remain readable files.</p>
           </div>
           <div className="actual-path"><code>{snapshot.workspacePath}</code></div>
           <div className="connection-row">
-            <span className="connection-logo">FS</span>
-            <span><strong>.bout/battles</strong><small>{snapshot.stats.total} battle bundles found</small></span>
-            <span className="status-pill complete"><Check size={13} /> Reading</span>
+            <span className="connection-logo">DB</span>
+            <span><strong>{snapshot.storage.engine}</strong><small>{snapshot.stats.total} indexed battle bundles</small></span>
+            <span className="status-pill complete"><Check size={13} /> Connected</span>
           </div>
+          <div className="actual-path"><code>{snapshot.storage.databasePath}</code></div>
         </article>
 
         <article className="settings-card">
@@ -51,6 +52,7 @@ export function VaultPage({ snapshot }: { snapshot: WorkspaceSnapshot }) {
             <span><b>Published bounties</b><small>{snapshot.stats.published}</small></span>
             <span><b>Saved verdicts</b><small>{snapshot.stats.reviewed}</small></span>
           </div>
+          <p>Artifact root: <code>{snapshot.storage.artifactRoot}</code></p>
         </article>
       </div>
 

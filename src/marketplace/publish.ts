@@ -4,7 +4,9 @@ import type { CreateTaskInput, CreateTaskResult } from "@gibwork/sdk";
 import { createGibworkClient } from "@gibwork/sdk/node";
 import { z } from "zod";
 import { readJson, writeJson } from "../core/json.js";
-import { bountyDraftSchema, toCreateTaskInput } from "./draft.js";
+import { syncBattleToDatabase } from "../db/store.js";
+import { toCreateTaskInput } from "./draft.js";
+import { bountyDraftSchema, publicationRecordSchema } from "./schemas.js";
 
 export interface TaskCreator {
   create(input: CreateTaskInput): Promise<CreateTaskResult>;
@@ -16,19 +18,10 @@ export interface PublishBountyInput {
   creator: TaskCreator;
 }
 
-const publicationRecordSchema = z.object({
-  schemaVersion: z.literal(1),
-  battleId: z.uuid(),
-  environment: z.literal("stage"),
-  taskId: z.uuid(),
-  intentId: z.uuid(),
-  txHash: z.string().min(1),
-  publishedAt: z.iso.datetime(),
-});
-
 export async function publishBounty(input: PublishBountyInput): Promise<{
   taskId: string;
   publicationPath: string;
+  indexWarning?: string;
 }> {
   const battleDirectory = path.resolve(input.workspace, ".bout", "battles", input.battleId);
   const draft = await readJson(
@@ -51,8 +44,19 @@ export async function publishBounty(input: PublishBountyInput): Promise<{
   await mkdir(privateDirectory, { recursive: true });
   const publicationPath = path.join(privateDirectory, "publication.json");
   await writeJson(publicationPath, publication);
+  let indexWarning: string | undefined;
+  try {
+    await syncBattleToDatabase(input.workspace, input.battleId);
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    indexWarning = `The bounty was published and its receipt was saved, but the SQLite index could not be refreshed: ${reason}`;
+  }
 
-  return { taskId: publication.taskId, publicationPath };
+  return {
+    taskId: publication.taskId,
+    publicationPath,
+    ...(indexWarning ? { indexWarning } : {}),
+  };
 }
 
 export async function createStageTaskCreator(keypairPath: string): Promise<TaskCreator> {

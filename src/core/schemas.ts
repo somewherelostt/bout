@@ -47,3 +47,21 @@ export const identityMapSchema = z.object({
 });
 
 export type IdentityMap = z.infer<typeof identityMapSchema>;
+
+export const verdictInputSchema = z.object({
+  winner: z.enum(["A", "B", "TIE", "BOTH_FAILED"]),
+  confidence: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]),
+  correctness: z.string().trim().min(1).max(20_000),
+  security: z.string().trim().min(1).max(20_000),
+  maintainability: z.string().trim().min(1).max(20_000),
+  evidence: z.array(z.string().trim().min(1).max(2_000)).min(1).max(50),
+  rationale: z.string().trim().min(1).max(20_000),
+});
+
+export const verdictRecordSchema = verdictInputSchema.extend({
+  schemaVersion: z.literal(1),
+  submittedAt: z.iso.datetime(),
+});
+
+export type VerdictInput = z.infer<typeof verdictInputSchema>;
+export type VerdictRecord = z.infer<typeof verdictRecordSchema>;

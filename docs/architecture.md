@@ -9,12 +9,12 @@ task + source candidates
           |
           v
   battle constructor
-      |           |
-      v           v
-review bundle   private state
-      |           |
-      v           v
-bounty draft    identity mapping
+      |           |              |
+      v           v              v
+review bundle   private state   SQLite index
+      |           |              |
+      v           v              v
+bounty draft    identity map    queryable metadata
       |
       v
 explicit publish confirmation
@@ -25,9 +25,9 @@ remote task + local receipt
 
 The review bundle contains only anonymous labels, normalized filenames, task instructions, verification metadata, and content hashes. Original source paths and label assignments remain in private local state.
 
-## Local state
+## Hybrid local state
 
-Each battle is written atomically under `.bout/battles/<battle-id>`:
+Each battle is written atomically under `.bout/battles/<battle-id>`. Structured metadata is then transactionally indexed in `.bout/bout.sqlite`:
 
 ```text
 review/
@@ -46,10 +46,16 @@ private/
 
 `verdict.json` is written only after the local reviewer completes the full structured contract: outcome (`A`, `B`, `TIE`, or `BOTH_FAILED`), confidence, correctness, security, maintainability, evidence, and rationale. Only schema-versioned verdicts count toward evidence metrics; incomplete historical files are left on disk but are not presented as valid results.
 
+The SQLite index contains normalized `battles`, `candidates`, `bounty_drafts`, `publications`, `verdicts`, `artifacts`, and `workflow_events` tables. Patch and task bodies are deliberately excluded. Artifact rows contain paths, sizes, visibility, and SHA-256 digests so files remain inspectable with normal developer tools.
+
+Database migrations are versioned and applied during storage initialization. API startup reconciles existing file-only battle directories into the index, and every supported write path refreshes the relevant battle transactionally. The artifact bundle remains the recovery source: deleting only `bout.sqlite` and restarting rebuilds the index.
+
 ## Safety properties
 
 - Candidate inputs with identical hashes are rejected.
 - Reviewer filenames never contain source identifiers.
+- Patch bodies remain outside the database.
+- SQLite foreign keys and transactions keep related metadata consistent.
 - Draft preparation performs no network or wallet operation.
 - The current publisher is stage-only.
 - Real-fund publishing requires an exact confirmation phrase.

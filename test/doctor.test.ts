@@ -5,7 +5,7 @@ describe("runDoctorChecks", () => {
   it("reports the supported runtime and git availability", () => {
     const checks = runDoctorChecks();
 
-    expect(checks.map((check) => check.label)).toEqual(["Node.js", "Git"]);
+    expect(checks.map((check) => check.label)).toEqual(["Node.js", "SQLite", "Git"]);
     expect(checks.every((check) => check.ok)).toBe(true);
   });
 });

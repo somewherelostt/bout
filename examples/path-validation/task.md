@@ -1,5 +1,7 @@
 # Prevent traversal outside the configured workspace
 
+Repository: local/path-safety
+
 The path resolver currently accepts values containing `..` and can return a path outside the configured workspace.
 
 ## Acceptance criteria

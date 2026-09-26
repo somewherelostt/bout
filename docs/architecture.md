@@ -36,12 +36,15 @@ review/
   candidate-b.patch
   manifest.json
   bounty-draft.json
+  verdict.json
 private/
   identity-map.json
   publication.json
 ```
 
 `bounty-draft.json` is safe to inspect before publication. `publication.json` is written only after the external create operation returns successfully.
+
+`verdict.json` is written only after the local reviewer completes the full structured contract: outcome (`A`, `B`, `TIE`, or `BOTH_FAILED`), confidence, correctness, security, maintainability, evidence, and rationale. Only schema-versioned verdicts count toward evidence metrics; incomplete historical files are left on disk but are not presented as valid results.
 
 ## Safety properties
 

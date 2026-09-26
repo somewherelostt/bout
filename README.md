@@ -47,6 +47,7 @@ The same task and verification command apply to both candidates. Original source
 | Offline bounty preview | Ready |
 | Guarded stage publishing | Ready |
 | Responsive local web workspace | Ready |
+| Structured four-way verdict capture | Ready |
 | Submission retrieval and verdict aggregation | Next |
 | Final Markdown and JSON reports | Next |
 
@@ -82,9 +83,11 @@ npm install --prefix web
 npm run dev:web
 ```
 
-Open `http://localhost:4173`. The workspace includes the bout composer, history, judge queue, vault, benchmarks, awards, and blind comparison flow. It reads and writes real `.bout` workspace artifacts through a local API; there is no seeded browser dataset.
+Open `http://localhost:4173`. The workspace includes the bout composer, history, judge queue, vault, evidence report, method, security posture, awards, and blind comparison flow. It reads and writes real `.bout` workspace artifacts through a local API; there is no seeded browser dataset.
 
 The composer creates a real anonymized battle bundle and prepares its Gibwork bounty draft. It does not publish the draft or move funds. To read live code-review bounties into the judge queue, provide `SOLANA_PRIVATE_KEY` only to the local API process before starting the workspace. The key is never returned to browser code.
+
+The review screen stores the complete reviewer contract—four-way outcome, confidence, correctness, security, maintainability, concrete evidence, and rationale—in `review/verdict.json`. Evidence metrics are computed from readable local artifacts and report their denominator and limits instead of inventing empty-state results.
 
 ## Run a blind battle
 

@@ -15,6 +15,8 @@ export interface BoutRecord {
   patchB: PatchRecord;
   verdict: VerdictRecord | null;
   publicationTaskId: string | null;
+  hasBountyDraft: boolean;
+  hasPublicationReceipt: boolean;
 }
 
 export interface PatchRecord {
@@ -26,7 +28,13 @@ export interface PatchRecord {
 }
 
 export interface VerdictRecord {
-  winner: "A" | "B";
+  schemaVersion: 1;
+  winner: "A" | "B" | "TIE" | "BOTH_FAILED";
+  confidence: 1 | 2 | 3 | 4 | 5;
+  correctness: string;
+  security: string;
+  maintainability: string;
+  evidence: string[];
   rationale: string;
   submittedAt: string;
 }
@@ -51,6 +59,7 @@ export interface WorkspaceStats {
 }
 
 export interface WorkspaceSnapshot {
+  generatedAt: string;
   battles: BoutRecord[];
   liveBounties: LiveBounty[];
   liveStatus: "connected" | "unconfigured" | "error";

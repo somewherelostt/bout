@@ -32,7 +32,7 @@ export function createBout(input: CreateBoutInput): Promise<{ battleId: string }
 
 export function saveVerdict(
   battleId: string,
-  verdict: Pick<VerdictRecord, "winner" | "rationale">,
+  verdict: Omit<VerdictRecord, "schemaVersion" | "submittedAt">,
 ): Promise<VerdictRecord> {
   return request<VerdictRecord>(`/api/battles/${encodeURIComponent(battleId)}/verdict`, {
     method: "POST",

@@ -10,7 +10,6 @@ import { prepareBountyDraft } from "../../src/marketplace/draft.js";
 import type {
   BoutRecord,
   LiveBounty,
-  VerdictRecord,
   WorkspaceSnapshot,
 } from "../src/types.js";
 
@@ -31,11 +30,17 @@ const createBoutSchema = z.object({
 });
 
 const verdictInputSchema = z.object({
-  winner: z.enum(["A", "B"]),
+  winner: z.enum(["A", "B", "TIE", "BOTH_FAILED"]),
+  confidence: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]),
+  correctness: z.string().trim().min(1).max(20_000),
+  security: z.string().trim().min(1).max(20_000),
+  maintainability: z.string().trim().min(1).max(20_000),
+  evidence: z.array(z.string().trim().min(1).max(2_000)).min(1).max(50),
   rationale: z.string().trim().min(1).max(20_000),
 });
 
 const verdictRecordSchema = verdictInputSchema.extend({
+  schemaVersion: z.literal(1),
   submittedAt: z.iso.datetime(),
 });
 
@@ -106,6 +111,7 @@ const server = createServer(async (request, response) => {
       const input = verdictInputSchema.parse(await readJsonBody(request));
       const record = verdictRecordSchema.parse({
         ...input,
+        schemaVersion: 1,
         submittedAt: new Date().toISOString(),
       });
       const verdictPath = path.resolve(workspace, ".bout", "battles", battleId, "review", "verdict.json");
@@ -144,13 +150,14 @@ async function loadWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
   const live = await loadLiveBounties();
   const stats = {
     total: battles.length,
-    prepared: battles.filter((battle) => battle.status === "Prepared").length,
-    published: battles.filter((battle) => battle.status === "Published").length,
-    reviewed: battles.filter((battle) => battle.status === "Complete").length,
+    prepared: battles.filter((battle) => battle.hasBountyDraft).length,
+    published: battles.filter((battle) => battle.hasPublicationReceipt).length,
+    reviewed: battles.filter((battle) => battle.verdict !== null).length,
     totalPool: battles.reduce((sum, battle) => sum + battle.reward, 0),
   };
 
   return {
+    generatedAt: new Date().toISOString(),
     battles,
     liveBounties: live.items,
     liveStatus: live.status,
@@ -219,6 +226,8 @@ async function loadBattle(battleId: string): Promise<BoutRecord | null> {
       patchB: buildPatch(candidateB, typedManifest.candidates?.[1]?.sha256 ?? ""),
       verdict: parsedVerdict?.success ? parsedVerdict.data : null,
       publicationTaskId: typedPublication?.taskId ?? null,
+      hasBountyDraft: draft !== null,
+      hasPublicationReceipt: publication !== null,
     };
   } catch {
     return null;

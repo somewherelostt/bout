@@ -10,7 +10,9 @@ import { BenchmarksPage } from "./pages/BenchmarksPage";
 import { HistoryPage } from "./pages/HistoryPage";
 import { HomePage } from "./pages/HomePage";
 import { JudgePage } from "./pages/JudgePage";
+import { MethodPage } from "./pages/MethodPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
+import { SecurityPage } from "./pages/SecurityPage";
 import { VaultPage } from "./pages/VaultPage";
 import type { CreateBoutInput, WorkspaceSnapshot } from "./types";
 
@@ -84,6 +86,9 @@ export function App() {
         <Route path="/judge" element={<JudgePage snapshot={snapshot} />} />
         <Route path="/vault" element={<VaultPage snapshot={snapshot} />} />
         <Route path="/benchmarks" element={<BenchmarksPage snapshot={snapshot} />} />
+        <Route path="/evidence" element={<Navigate to="/benchmarks" replace />} />
+        <Route path="/method" element={<MethodPage snapshot={snapshot} />} />
+        <Route path="/security" element={<SecurityPage snapshot={snapshot} />} />
         <Route path="/awards" element={<AwardsPage snapshot={snapshot} />} />
         <Route
           path="/battle/:id"

@@ -3,7 +3,9 @@ import {
   Clock3,
   History,
   KeyRound,
+  LockKeyhole,
   Menu,
+  Microscope,
   Plus,
   Trophy,
   X,
@@ -125,7 +127,11 @@ export function Sidebar({ activity, open, onOpen, onClose }: SidebarProps) {
           <nav className="sidebar-nav secondary" aria-label="Reports navigation">
             <NavLink to="/benchmarks" onClick={onClose}>
               <ChartNoAxesColumnIncreasing size={19} strokeWidth={1.7} />
-              Benchmarks
+              Evidence
+            </NavLink>
+            <NavLink to="/method" onClick={onClose}>
+              <Microscope size={19} strokeWidth={1.7} />
+              Method
             </NavLink>
             <NavLink to="/awards" onClick={onClose}>
               <Trophy size={19} strokeWidth={1.7} />
@@ -133,18 +139,18 @@ export function Sidebar({ activity, open, onOpen, onClose }: SidebarProps) {
             </NavLink>
           </nav>
 
-          <button className="profile-row" type="button" onClick={() => go("/vault")}>
-            <span className="avatar">MA</span>
+          <button className="profile-row" type="button" onClick={() => go("/security")}>
+            <span className="avatar"><LockKeyhole size={16} /></span>
             <span>
-              <strong>Maaz</strong>
-              <small>Builder · Reviewer</small>
+              <strong>Security boundary</strong>
+              <small>Local keys · explicit publishing</small>
             </span>
             <ArrowUpRight size={15} />
           </button>
 
           <div className="sidebar-legal">
             <span>Built with Gibwork</span>
-            <span>Privacy · Terms</span>
+            <NavLink to="/security" onClick={onClose}>Security</NavLink>
           </div>
         </div>
       </aside>

@@ -6,15 +6,18 @@ wallet, quote, intent, task, or transaction value.
 ## Current prepared run
 
 - Battle ID: `9dace82d-cf59-4842-8698-e80792cf7f0f`
-- Pool: `1.00 USDC`
-- Minimum payout: `0.50 USDC`
+- Pool: `2.00 USDC`
+- Minimum payout: `1.00 USDC`
 - Capacity: two approved reviews at the minimum payout
-- Publication state: not started
+- Publication state: not started; the stage quote is blocked by wallet authorization (HTTP 403)
 - Network: Gibwork stage, using real Solana-mainnet USDC
 
-Do not send funds until the signing wallet is active on the Gibwork account and
-`bout bounty quote` succeeds. The wallet currently shown for the signed-in account is managed
-in the Gibwork app; its export-key control does not prove that it supports external signing.
+Do not send funds until the signing wallet is active for the **stage** Gibwork account and
+`bout bounty quote` succeeds. The exported key passes the offline public-address check, but
+the stage API currently returns: “Use an active platform wallet linked to an existing Gibwork
+user to create a bounty.” The wallet appears in the signed-in website account; this does not
+by itself establish stage access. Ask the Gibwork team to enable or link that wallet on stage
+before attempting another quote.
 
 ## 1. Choose and verify the signing wallet
 
@@ -75,7 +78,7 @@ and sync as well. The quote may request authentication signatures from the exter
 Expected shape:
 
 ```text
-FUNDING    1.00 USDC
+FUNDING    2.00 USDC
 FEE        <current fee> USDC
 TOTAL      <exact debit> USDC
 SPEND      none; payment transaction was not signed or submitted
@@ -88,7 +91,7 @@ Stop if any of these occur:
 
 - `403` or an inactive/unlinked-wallet message;
 - a token other than USDC;
-- a funding amount other than `1.00`;
+- a funding amount other than `2.00`;
 - a fee or total that you do not accept;
 - a task title or payload different from the prepared battle.
 
@@ -99,9 +102,8 @@ new prepare/publish attempt and follow any returned retry interval.
 
 1. Send **Solana-network USDC**, not Ethereum/Base/Polygon USDC.
 2. Verify the USDC mint is `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v`.
-3. Send at least the printed `TOTAL`. A `$1.00` transfer is sufficient only if `TOTAL` is exactly
-   `1.00 USDC`; otherwise it will fail safely before publication.
-4. Wait until MetaMask shows the confirmed Solana balance.
+3. Send at least the printed `TOTAL`; the `2.00 USDC` pool alone may not cover any quoted fee.
+4. Wait until the wallet shows the confirmed Solana USDC balance.
 5. Do not add unrelated funds or assets to this wallet.
 
 ## 5. Publish once

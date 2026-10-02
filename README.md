@@ -194,7 +194,7 @@ Generate the complete bounty payload locally:
 
 ```bash
 bout bounty prepare <battle-id> \
-  --pool 1.00 \
+  --pool 2.00 \
   --min-payout 1.00
 ```
 

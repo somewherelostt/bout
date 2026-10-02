@@ -12,6 +12,7 @@
 - [x] Markdown and JSON final report export.
 - [x] Automated tests, production builds, CI, security notes, and architecture documentation.
 - [ ] Complete one real stage run using a dedicated low-balance wallet.
+- [ ] Resolve the stage wallet authorization error (HTTP 403), obtain a live quote, and approve the exact debit before funding.
 - [ ] Obtain at least two real structured review submissions for the demonstration task.
 
 ## Evidence package

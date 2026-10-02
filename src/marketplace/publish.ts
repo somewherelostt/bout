@@ -1,16 +1,13 @@
-import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type {
   CreateTaskInput,
   CreateTaskResult,
   PreparedTaskIntent,
   TaskSubmitResult,
+  WalletSigner,
 } from "@gibwork/sdk";
-import {
-  createGibworkClient,
-  createKeypairSigner,
-  signPreparedTransaction,
-} from "@gibwork/sdk/node";
+import { GibworkClient, signPreparedTransaction } from "@gibwork/sdk";
 import { z } from "zod";
 import { battleIdSchema } from "../core/schemas.js";
 import { readJson, writeJson } from "../core/json.js";
@@ -24,6 +21,7 @@ import {
   publicationRecordSchema,
   type PublicationAttempt,
 } from "./schemas.js";
+import { loadWalletSigner } from "./signer.js";
 
 export interface PreparedTaskContext {
   intentId: string;
@@ -209,9 +207,17 @@ export async function createStageTaskCreator(
   keypairPath: string,
   maximumTotalDebit: string,
 ): Promise<TaskCreator> {
-  const privateKey = await readPrivateKeyFile(keypairPath);
-  const client = createGibworkClient({ privateKey, production: false });
-  const signer = createKeypairSigner(privateKey);
+  return createStageTaskCreatorWithSigner(
+    await loadWalletSigner({ keypair: keypairPath }),
+    maximumTotalDebit,
+  );
+}
+
+export function createStageTaskCreatorWithSigner(
+  signer: WalletSigner,
+  maximumTotalDebit: string,
+): TaskCreator {
+  const client = createStageGibworkClientWithSigner(signer);
   const maximum = decimalAmountSchema.parse(maximumTotalDebit);
   return {
     create: async (input, callbacks) => {
@@ -249,7 +255,11 @@ export async function createStageTaskCreator(
 }
 
 export async function createStageTaskQuoter(keypairPath: string): Promise<TaskQuoter> {
-  const client = await createStageGibworkClient(keypairPath);
+  return createStageTaskQuoterWithSigner(await loadWalletSigner({ keypair: keypairPath }));
+}
+
+export function createStageTaskQuoterWithSigner(signer: WalletSigner): TaskQuoter {
+  const client = createStageGibworkClientWithSigner(signer);
   return {
     prepare: (input) => client.tasks.prepareCreate(input),
   };
@@ -309,23 +319,11 @@ export function assertAuthorizedTotal(
 }
 
 export async function createStageGibworkClient(keypairPath: string) {
-  const privateKey = await readPrivateKeyFile(keypairPath);
-  return createGibworkClient({ privateKey, production: false });
+  return createStageGibworkClientWithSigner(await loadWalletSigner({ keypair: keypairPath }));
 }
 
-async function readPrivateKeyFile(keypairPath: string): Promise<string | readonly number[]> {
-  const content = await readFile(path.resolve(keypairPath), "utf8");
-  const trimmed = content.trim();
-
-  if (trimmed.startsWith("[")) {
-    return z.array(z.number().int().min(0).max(255)).min(32).max(64).parse(JSON.parse(trimmed));
-  }
-
-  if (trimmed.length === 0) {
-    throw new Error("The configured keypair file is empty.");
-  }
-
-  return trimmed;
+export function createStageGibworkClientWithSigner(signer: WalletSigner): GibworkClient {
+  return new GibworkClient({ signer, production: false });
 }
 
 function toPaymentQuoteRecord(paymentQuote: CreateTaskResult["paymentQuote"]) {

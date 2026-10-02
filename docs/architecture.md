@@ -73,7 +73,9 @@ Database migrations are versioned and applied during storage initialization. API
 - Real-fund publishing requires an exact confirmation phrase.
 - The SDK quote is checked against a caller-supplied maximum total debit before signing.
 - A durable exclusive attempt record is written before network submission, and unresolved attempts block retries.
-- Wallet material is read from an explicit file and never persisted.
+- Wallet signing uses either an explicit local keypair file or a trusted, address-pinned external
+  `WalletSigner` module. Bout never persists signer secrets. An external module is executable
+  local code and is not a claim of compatibility with the Gibwork-managed mobile wallet.
 - Submission synchronization discards reviewer profile data before persistence.
 - Winner resolution occurs only inside creator-private report artifacts.
 - Replaceable JSON artifacts use same-directory temporary files and atomic renames. Report regeneration invalidates the old JSON commit marker first, then commits only a JSON/Markdown pair with the same generation ID.

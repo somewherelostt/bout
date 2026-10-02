@@ -9,7 +9,7 @@ This runbook keeps the final demonstration terminal-first and within five minute
 - Close notifications and unrelated applications.
 - Use a clean workspace with no personal paths in the terminal prompt.
 - Confirm that the published bounty already has at least two real reviewer submissions.
-- Never display the keypair file or its contents.
+- Never display a keypair file, private key, recovery phrase, or signer approval screen.
 
 ## Recording sequence
 
@@ -19,7 +19,8 @@ This runbook keeps the final demonstration terminal-first and within five minute
 4. Show the anonymous `candidate-a.patch`, `candidate-b.patch`, and manifest hashes.
 5. Run `bout bounty prepare` and inspect the generated public payload.
 6. Show the already published Gibwork task and its task ID. Run `bout bounty publish-status <battle-id>` to show the confirmed local receipt. If publishing during the recording, use `--max-total` and confirm the prepared SDK quote does not exceed that ceiling.
-7. Run `bout bounty sync` with the creator wallet path kept outside the camera crop or supplied through a shell variable.
+7. Run `bout bounty sync` with either the creator keypair path or external signer module path
+   supplied through a shell variable; keep paths and wallet approvals outside the camera crop.
 8. Run `bout report generate`.
 9. Open `private/report.md` and point out the tally, evidence, consensus, and privately resolved source slot.
 10. Optionally show the local workbench for no more than 20 seconds to demonstrate that the same artifact-backed state is inspectable visually.

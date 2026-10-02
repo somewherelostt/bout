@@ -12,29 +12,30 @@ wallet, quote, intent, task, or transaction value.
 - Publication state: not started
 - Network: Gibwork stage, using real Solana-mainnet USDC
 
-Do not send funds until the dedicated wallet is linked to an active Gibwork account and
-`bout bounty quote` succeeds.
+Do not send funds until the signing wallet is active on the Gibwork account and
+`bout bounty quote` succeeds. The wallet currently shown for the signed-in account is managed
+in the Gibwork app; its export-key control does not prove that it supports external signing.
 
-## 1. Create and link the dedicated wallet
+## 1. Choose and verify the signing wallet
 
-1. Create a separate MetaMask wallet for this demo, preferably with a separate Secret Recovery
-   Phrase rather than another account holding unrelated assets.
-2. Back up the recovery phrase offline. Never paste it into Bout, a terminal command, chat, a
-   screenshot, or the demo recording.
-3. In MetaMask, select the wallet's **Solana** address. Do not use its `0x` EVM address.
-4. Sign in to [Gibwork](https://app.gib.work/) with the existing hackathon account and link this
-   exact Solana wallet as the active platform wallet. The stage API rejects a fresh unlinked
-   address, even when it has funds.
-5. If Gibwork does not offer a wallet-linking control for the account, stop and ask a hackathon
-   organizer to link or activate the address. Do not fund an address that the API rejects.
-6. Export only this dedicated account's **Solana private key** locally. MetaMask Mobile exposes
-   private keys per network under Account details. Store the key in an owner-only file outside
-   the repository. Bout accepts a base58 32/64-byte key or a JSON array of 32/64 bytes.
+1. Decide whether to use a separate, low-balance wallet or the Gibwork-managed primary wallet.
+   The primary wallet is not isolated from the account, even if its current balance is zero.
+2. The wallet must be active on the Gibwork account. Check its full **Solana** address; an EVM
+   `0x` address is not interchangeable. If Gibwork does not offer a way to link a separate wallet,
+   ask Gibwork support before funding it.
+3. Prefer a compatible external signer when available. Bout accepts a trusted local module via
+   `--signer-module`; see [the signer contract](external-signer.md). Gibwork's app export-key
+   option by itself is **not** an external signing interface, and we have not verified that the
+   managed wallet can answer third-party signing requests.
+4. The fallback is an owner-only local file containing the chosen wallet's **Solana private key**,
+   outside the repository and cloud-synced folders. Never paste a private key or recovery phrase
+   into chat, shell history, screenshots, or the demo recording. Bout accepts a base58 32/64-byte
+   key or a JSON array of 32/64 bytes.
 
-MetaMask warns that an exported private key is displayed in clear text. Keep the wallet empty
-except for this small run, never send the key to another person, and never let it enter the camera
-frame. See MetaMask's [Solana account guide](https://support.metamask.io/configure/networks/navigating-solana/)
-and [private-key export warning](https://support.metamask.io/configure/accounts/how-to-export-an-accounts-private-key/).
+Exporting the primary Gibwork wallet's key gives local software full control over that wallet.
+Do not do so by default; make an informed choice after checking whether a compatible external
+signer is available. MetaMask's [private-key export warning](https://support.metamask.io/configure/accounts/how-to-export-an-accounts-private-key/)
+explains the general risk of exposing wallet keys.
 
 ## 2. Validate locally before funding
 
@@ -43,30 +44,33 @@ From the repository root, set local variables. The key file contents must not be
 ```powershell
 $boutBattleId = "9dace82d-cf59-4842-8698-e80792cf7f0f"
 $boutKeyPath = "C:\secure\bout-stage-keypair.txt"
+$boutWallet = "<full active Gibwork Solana address>"
 
 npm run build
 node dist/cli.js doctor
 node dist/cli.js bounty publish-status $boutBattleId
+node dist/cli.js wallet-check --keypair $boutKeyPath --expected-wallet $boutWallet
 ```
 
-Optionally verify that the file resolves to the expected Solana address without contacting
-Gibwork:
+For a compatible external signer module, replace the final command with:
 
 ```powershell
-npx --yes @gibwork/cli@0.2.4 `
-  --environment stage `
-  --keypair $boutKeyPath `
-  wallet address
+$boutSigner = "C:\secure\bout-signer.mjs"
+node dist/cli.js wallet-check --signer-module $boutSigner --expected-wallet $boutWallet
 ```
 
-The printed address must exactly match the Solana address linked in Gibwork and the address that
-will receive USDC.
+`wallet-check` makes no network request or signature. Its printed address must match the
+Gibwork wallet and the address that will receive USDC.
 
 ## 3. Request the live quote without paying
 
 ```powershell
-node dist/cli.js bounty quote $boutBattleId --keypair $boutKeyPath
+node dist/cli.js bounty quote $boutBattleId --keypair $boutKeyPath --expected-wallet $boutWallet
 ```
+
+External signer: replace `--keypair $boutKeyPath` with
+`--signer-module $boutSigner --expected-wallet $boutWallet`. Use this replacement for publish
+and sync as well. The quote may request authentication signatures from the external wallet.
 
 Expected shape:
 
@@ -109,6 +113,7 @@ $boutQuotedTotal = "<TOTAL from quote>"
 
 node dist/cli.js bounty publish $boutBattleId `
   --keypair $boutKeyPath `
+  --expected-wallet $boutWallet `
   --max-total $boutQuotedTotal `
   --confirm-real-funds "I UNDERSTAND STAGE USES REAL USDC"
 ```
@@ -132,7 +137,7 @@ Give two reviewers the public Gibwork task and require the response contract emb
 bounty. After two real submissions appear:
 
 ```powershell
-node dist/cli.js bounty sync $boutBattleId --keypair $boutKeyPath
+node dist/cli.js bounty sync $boutBattleId --keypair $boutKeyPath --expected-wallet $boutWallet
 node dist/cli.js report generate $boutBattleId
 node dist/cli.js battle list
 ```

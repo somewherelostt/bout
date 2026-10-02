@@ -5,6 +5,7 @@ import type {
   Paginated,
   SubmissionPaginationQuery,
   TaskSubmission,
+  WalletSigner,
 } from "@gibwork/sdk";
 import { type ZodType } from "zod";
 import {
@@ -16,7 +17,8 @@ import {
 } from "../core/schemas.js";
 import { readJson, writeJson, writeText } from "../core/json.js";
 import { syncBattleToDatabase } from "../db/store.js";
-import { createStageGibworkClient } from "./publish.js";
+import { createStageGibworkClientWithSigner } from "./publish.js";
+import { loadWalletSigner } from "./signer.js";
 import {
   finalReportSchema,
   publicationRecordSchema,
@@ -36,7 +38,11 @@ export interface SubmissionLister {
 }
 
 export async function createStageSubmissionLister(keypairPath: string): Promise<SubmissionLister> {
-  const client = await createStageGibworkClient(keypairPath);
+  return createStageSubmissionListerWithSigner(await loadWalletSigner({ keypair: keypairPath }));
+}
+
+export function createStageSubmissionListerWithSigner(signer: WalletSigner): SubmissionLister {
+  const client = createStageGibworkClientWithSigner(signer);
   return {
     list: (taskId, query) => client.submissions.list(taskId, query),
   };

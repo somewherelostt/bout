@@ -6,17 +6,18 @@ import { createBattle } from "./core/battle.js";
 import { runDoctorChecks } from "./doctor.js";
 import { prepareBountyDraft } from "./marketplace/draft.js";
 import {
-  createStageTaskQuoter,
-  createStageTaskCreator,
+  createStageTaskQuoterWithSigner,
+  createStageTaskCreatorWithSigner,
   inspectPublicationState,
   publishBounty,
   quoteBounty,
 } from "./marketplace/publish.js";
 import {
-  createStageSubmissionLister,
+  createStageSubmissionListerWithSigner,
   generateFinalReport,
   syncBountySubmissions,
 } from "./marketplace/reviews.js";
+import { loadWalletSigner, signerAddress, type SignerSource } from "./marketplace/signer.js";
 import { listIndexedBattles } from "./db/store.js";
 
 const VERSION = "0.1.0";
@@ -26,6 +27,21 @@ const program = new Command()
   .name("bout")
   .description("Paid blind review for competing code patches, powered by Gibwork.")
   .version(VERSION);
+
+function addSignerOptions(command: Command): Command {
+  return command
+    .option("--keypair <path>", "Path to a local wallet keypair file")
+    .option("--signer-module <path>", "Trusted local module exporting createBoutSigner()")
+    .option("--expected-wallet <address>", "Required address when using --signer-module");
+}
+
+addSignerOptions(
+  program.command("wallet-check").description("Check the selected signer address without a network call or transaction."),
+).action(async (options: SignerSource) => {
+  const signer = await loadWalletSigner(options);
+  process.stdout.write(`ADDRESS    ${signerAddress(signer)}\n`);
+  process.stdout.write("SPEND      none; no network request or transaction was made\n");
+});
 
 program
   .command("doctor")
@@ -143,18 +159,19 @@ bounty
     },
   );
 
-bounty
-  .command("quote")
-  .description("Request the live stage payment quote without signing or submitting a transaction.")
-  .argument("<battle-id>", "Local battle UUID")
-  .requiredOption("--keypair <path>", "Path to a local wallet keypair file")
+addSignerOptions(
+  bounty
+    .command("quote")
+    .description("Request the live stage payment quote without signing or submitting a transaction.")
+    .argument("<battle-id>", "Local battle UUID"),
+)
   .option("--workspace <path>", "Workspace containing local battle state")
   .action(
     async (
       battleId: string,
-      options: { keypair: string; workspace?: string },
+      options: SignerSource & { workspace?: string },
     ) => {
-      const quoter = await createStageTaskQuoter(options.keypair);
+      const quoter = createStageTaskQuoterWithSigner(await loadWalletSigner(options));
       const quote = await quoteBounty({
         workspace: workspaceOrCurrentDirectory(options.workspace),
         battleId,
@@ -168,11 +185,12 @@ bounty
     },
   );
 
-bounty
-  .command("publish")
-  .description("Create the prepared bounty on stage after explicit real-funds confirmation.")
-  .argument("<battle-id>", "Local battle UUID")
-  .requiredOption("--keypair <path>", "Path to a local wallet keypair file")
+addSignerOptions(
+  bounty
+    .command("publish")
+    .description("Create the prepared bounty on stage after explicit real-funds confirmation.")
+    .argument("<battle-id>", "Local battle UUID"),
+)
   .requiredOption(
     "--confirm-real-funds <confirmation>",
     'Must be exactly "I UNDERSTAND STAGE USES REAL USDC"',
@@ -186,17 +204,19 @@ bounty
     async (
       battleId: string,
       options: {
-        keypair: string;
         confirmRealFunds: string;
         maxTotal: string;
         workspace?: string;
-      },
+      } & SignerSource,
     ) => {
       if (options.confirmRealFunds !== "I UNDERSTAND STAGE USES REAL USDC") {
         throw new Error("Refusing to publish without the exact real-funds confirmation phrase.");
       }
 
-      const creator = await createStageTaskCreator(options.keypair, options.maxTotal);
+      const creator = createStageTaskCreatorWithSigner(
+        await loadWalletSigner(options),
+        options.maxTotal,
+      );
       const result = await publishBounty({
         workspace: workspaceOrCurrentDirectory(options.workspace),
         battleId,
@@ -243,18 +263,19 @@ bounty
     process.exitCode = 2;
   });
 
-bounty
-  .command("sync")
-  .description("Retrieve creator-visible Gibwork submissions and validate structured reviews.")
-  .argument("<battle-id>", "Local battle UUID")
-  .requiredOption("--keypair <path>", "Path to the creator wallet keypair file")
+addSignerOptions(
+  bounty
+    .command("sync")
+    .description("Retrieve creator-visible Gibwork submissions and validate structured reviews.")
+    .argument("<battle-id>", "Local battle UUID"),
+)
   .option("--workspace <path>", "Workspace containing local battle state")
   .action(
     async (
       battleId: string,
-      options: { keypair: string; workspace?: string },
+      options: SignerSource & { workspace?: string },
     ) => {
-      const lister = await createStageSubmissionLister(options.keypair);
+      const lister = createStageSubmissionListerWithSigner(await loadWalletSigner(options));
       const { record, submissionsPath } = await syncBountySubmissions({
         workspace: workspaceOrCurrentDirectory(options.workspace),
         battleId,

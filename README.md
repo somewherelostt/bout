@@ -74,6 +74,7 @@ The same task and verification command apply to both candidates. Original source
 | Private identity mapping | Ready |
 | Offline bounty preview | Ready |
 | Guarded stage publishing | Ready |
+| External wallet-signer module support | Ready; provider-specific adapter required |
 | Creator-owned submission synchronization | Ready |
 | Structured review parsing and validation | Ready |
 | Deterministic multi-review consensus | Ready |
@@ -214,6 +215,19 @@ bout bounty quote <battle-id> \
   --keypair /absolute/path/to/keypair.json
 ```
 
+To keep a compatible wallet's key inside its own provider, use a trusted local signer module
+instead of `--keypair`:
+
+```bash
+bout wallet-check --signer-module /absolute/path/to/signer.mjs --expected-wallet <Solana-address>
+bout bounty quote <battle-id> --signer-module /absolute/path/to/signer.mjs --expected-wallet <Solana-address>
+```
+
+The same `--signer-module` and `--expected-wallet` flags work for `bounty publish` and
+`bounty sync`. See the [external signer contract](docs/external-signer.md). This does not imply
+that the Gibwork mobile app exposes an adapter; its export-key option alone is not a signing
+connection.
+
 This authenticated prepare-only request creates a temporary unpaid stage intent. It prints the
 funding amount, platform fee, and exact total debit, but does not sign or submit the payment
 transaction. The wallet must already be linked to an active Gibwork user. Fund the wallet only
@@ -234,6 +248,8 @@ bout bounty publish <battle-id> \
 ```
 
 Bout refuses to publish unless the confirmation phrase matches exactly. It prepares the SDK transaction first and refuses to sign when Gibwork's quoted total debit exceeds `--max-total`. Wallet material is read from the supplied file, used locally for signing, and never written into battle state or command output.
+With an external signer module, Bout receives signatures from that module instead of loading a
+key file; the module must be trusted and is pinned to `--expected-wallet`.
 
 Immediately before submission, Bout writes an exclusive creator-private recovery record. If the request times out, returns `processing`, or otherwise becomes uncertain, that record blocks another publish attempt so the same battle cannot be funded twice. Inspect it with:
 
@@ -316,6 +332,7 @@ Bout is designed around explicit boundaries:
 - Publishing currently supports stage only.
 - Financial actions require explicit confirmation.
 - Wallet secrets are never persisted or logged.
+- External signer modules are local executable code, must be trusted, and are address-pinned before SDK calls.
 
 Do not place proprietary code, credentials, personal information, internal hostnames, or secret-bearing logs in reviewer-facing files.
 
@@ -323,6 +340,7 @@ Do not place proprietary code, credentials, personal information, internal hostn
 
 ```text
 bout doctor
+bout wallet-check [--keypair <path> | --signer-module <path> --expected-wallet <address>]
 bout battle create [options]
 bout battle list [options]
 bout bounty prepare <battle-id> [options]

@@ -208,7 +208,7 @@ This command:
 
 Review the generated draft before publishing it.
 
-Request Gibwork's current stage quote before funding the dedicated wallet:
+Request Gibwork's current stage quote before funding the full bounty pool:
 
 ```bash
 bout bounty quote <battle-id> \
@@ -230,8 +230,11 @@ connection.
 
 This authenticated prepare-only request creates a temporary unpaid stage intent. It prints the
 funding amount, platform fee, and exact total debit, but does not sign or submit the payment
-transaction. The wallet must already be linked to an active Gibwork user. Fund the wallet only
-after checking this output, then use the printed `TOTAL` as the `--max-total` ceiling below.
+transaction. The wallet must already be linked to an active Gibwork user. If Gibwork reports
+that the wallet has no initialized USDC token account, a small real Solana-mainnet USDC deposit
+is needed before it can return a quote. Verify the wallet and token first; this initial deposit
+is not a bounty payment or permission to publish. Once the quote succeeds, top up only as
+needed to cover its `TOTAL`, and use that amount as the `--max-total` ceiling below.
 
 ## Publish to stage
 

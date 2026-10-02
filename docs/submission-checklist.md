@@ -6,13 +6,14 @@
 - [x] Gibwork SDK is required for publication and review synchronization.
 - [x] Anonymous A/B construction, integrity hashes, and private identity mapping.
 - [x] Offline bounty preparation and explicitly gated stage publication.
-- [x] Prepare-only live quote command that exposes the exact debit before funding or signing.
+- [x] Prepare-only live quote command that exposes the exact debit before final top-up or signing.
 - [x] Creator-owned submission synchronization with no seeded product data.
 - [x] Structured review validation, deterministic consensus, and private winner resolution.
 - [x] Markdown and JSON final report export.
 - [x] Automated tests, production builds, CI, security notes, and architecture documentation.
 - [ ] Complete one real stage run using a dedicated low-balance wallet.
-- [ ] Resolve the stage wallet authorization error (HTTP 403), obtain a live quote, and approve the exact debit before funding.
+- [x] Resolve the stage wallet authorization error (HTTP 403).
+- [ ] Initialize the wallet's Solana USDC token account, obtain a live quote, and approve the exact debit before bounty publication.
 - [ ] Obtain at least two real structured review submissions for the demonstration task.
 
 ## Evidence package

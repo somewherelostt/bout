@@ -9,15 +9,15 @@ wallet, quote, intent, task, or transaction value.
 - Pool: `2.00 USDC`
 - Minimum payout: `1.00 USDC`
 - Capacity: two approved reviews at the minimum payout
-- Publication state: not started; the stage quote is blocked by wallet authorization (HTTP 403)
+- Publication state: not started; stage wallet access works, but quoting requires an initialized USDC token account (HTTP 400)
 - Network: Gibwork stage, using real Solana-mainnet USDC
 
-Do not send funds until the signing wallet is active for the **stage** Gibwork account and
-`bout bounty quote` succeeds. The exported key passes the offline public-address check, but
-the stage API currently returns: “Use an active platform wallet linked to an existing Gibwork
-user to create a bounty.” The wallet appears in the signed-in website account; this does not
-by itself establish stage access. Ask the Gibwork team to enable or link that wallet on stage
-before attempting another quote.
+The exported key passes the offline public-address check and the Gibwork team migrated the
+wallet for stage use. The API no longer returns the former wallet-authorization error. Its
+current response is: “The funding wallet does not have an initialized USDC token account.
+Deposit USDC and try again.” An initial, small **real Solana-mainnet USDC** deposit is needed
+to initialize that token account before a live quote can be obtained. Do not fund the entire
+bounty or publish until the exact quote has been reviewed and approved.
 
 ## 1. Choose and verify the signing wallet
 
@@ -67,6 +67,13 @@ Gibwork wallet and the address that will receive USDC.
 
 ## 3. Request the live quote without paying
 
+If the wallet still has no USDC token account, first use the wallet's receive flow to deposit
+a small user-selected amount of **native Solana USDC** to the verified wallet address. This is
+a real transfer, but it does not publish the bounty. Confirm the Solana network and the USDC
+mint `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v` before sending. A `1.00 USDC`
+initial deposit is not enough to pay the planned `2.00 USDC` bounty; it only lets us retry
+the quote. Wait for the deposit to confirm before proceeding.
+
 ```powershell
 node dist/cli.js bounty quote $boutBattleId --keypair $boutKeyPath --expected-wallet $boutWallet
 ```
@@ -90,6 +97,7 @@ an unsigned transaction. It does not sign or submit the payment transaction.
 Stop if any of these occur:
 
 - `403` or an inactive/unlinked-wallet message;
+- `400` reporting a missing USDC token account (confirm the initial deposit and token mint);
 - a token other than USDC;
 - a funding amount other than `2.00`;
 - a fee or total that you do not accept;
@@ -102,7 +110,8 @@ new prepare/publish attempt and follow any returned retry interval.
 
 1. Send **Solana-network USDC**, not Ethereum/Base/Polygon USDC.
 2. Verify the USDC mint is `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v`.
-3. Send at least the printed `TOTAL`; the `2.00 USDC` pool alone may not cover any quoted fee.
+3. Top up the wallet until its total Solana USDC balance covers the printed `TOTAL`; the
+   `2.00 USDC` pool alone may not cover any quoted fee.
 4. Wait until the wallet shows the confirmed Solana USDC balance.
 5. Do not add unrelated funds or assets to this wallet.
 

@@ -11,9 +11,9 @@
 - [x] Structured review validation, deterministic consensus, and private winner resolution.
 - [x] Markdown and JSON final report export.
 - [x] Automated tests, production builds, CI, security notes, and architecture documentation.
-- [ ] Complete one real stage run using a dedicated low-balance wallet.
+- [x] Publish one real stage bounty using the dedicated low-balance wallet. Task ID: `76bc62aa-5dca-4758-9f10-f77205cd0d01`.
 - [x] Resolve the stage wallet authorization error (HTTP 403).
-- [ ] Initialize the wallet's Solana USDC token account, obtain a live quote, and approve the exact debit before bounty publication.
+- [x] Initialize the wallet's Solana USDC token account, verify the live quote, and publish once for exactly `2.00 USDC`. The payment transaction is finalized.
 - [ ] Obtain at least two real structured review submissions for the demonstration task.
 
 ## Evidence package
@@ -21,7 +21,7 @@
 - [x] Add an original cover image and a current visual-workbench screenshot.
 - [x] Prepare a paste-ready Gibwork submission draft with clearly marked evidence placeholders.
 - [x] Publish and verify the public Notion project brief.
-- [ ] Add the real Gibwork task URL or task ID to the README demo section.
+- [x] Add the real Gibwork stage task ID to the README demo section. A publicly accessible stage task URL has not been verified.
 - [ ] Add redacted terminal screenshots for creation, publication, synchronization, and report generation.
 - [ ] Add a public demo video URL.
 - [ ] Verify every URL in a signed-out browser.

@@ -40,6 +40,8 @@ No dashboard is required. Every task, patch, decision, and receipt remains inspe
 
 Hosted showcase: [bout-omega.vercel.app](https://bout-omega.vercel.app). The deployment is intentionally read-only and contains no seeded records, wallet credentials, or persistent review state; real workflows run through the local CLI.
 
+Live stage demonstration: battle `9dace82d-cf59-4842-8698-e80792cf7f0f` was published once as Gibwork task `76bc62aa-5dca-4758-9f10-f77205cd0d01`. The `2.00 USDC` payment [finalized on Solana](https://explorer.solana.com/tx/3w4B2qPPbFxfa2hUxHcY3xHydeWyAFKjA9LUjFLAj2fiyCfbHaGPcEyL2Lm3kcySWGSYHf8mCcEvtNTNG2BcNohG). Two independent reviews and the final report are still pending; no sample verdicts are presented as real results.
+
 ![Bout local review workbench](docs/screenshots/showcase-home.png)
 
 ## Why Bout

@@ -54,7 +54,7 @@ The integration is intentionally guarded. Draft generation is offline. Publishin
 - **Read-only visual showcase:** https://bout-omega.vercel.app
 - **Project brief:** https://maaztwts.notion.site/Bout-Paid-Blind-Code-Review-3e732902e4a38129804adae0dbbb4820
 - **Demo video:** ADD BEFORE SUBMITTING — paste the public recording URL
-- **Published Gibwork task:** ADD BEFORE SUBMITTING — paste the task URL or ID
+- **Published Gibwork stage task:** `76bc62aa-5dca-4758-9f10-f77205cd0d01` (SDK-verified; a public stage task URL has not yet been verified)
 
 ### Setup
 
@@ -92,6 +92,7 @@ The README documents the guarded stage publishing, synchronization, and reportin
 - The hosted showcase returns no seeded tasks or reviewer records and rejects write requests.
 - Secret, personal-path, and private-workspace scans pass.
 - High- and critical-severity dependency checks pass.
+- One real stage bounty was published for exactly `2.00 USDC`; its Solana payment transaction finalized without error. Reviewer sync and final report are pending real submissions.
 
 ## Upload order for the Gibwork editor
 
@@ -111,7 +112,7 @@ The README documents the guarded stage publishing, synchronization, and reportin
 
 Do not submit until each item is true:
 
-- [ ] A real Gibwork stage task URL or ID is present.
+- [x] A real Gibwork stage task URL or ID is present.
 - [ ] At least two real structured reviewer submissions were synchronized.
 - [ ] The final report screenshot contains no private path, wallet address, key material, or reviewer profile data.
 - [ ] The demo video is public and opens in a signed-out browser.

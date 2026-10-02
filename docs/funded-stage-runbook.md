@@ -9,15 +9,15 @@ wallet, quote, intent, task, or transaction value.
 - Pool: `2.00 USDC`
 - Minimum payout: `1.00 USDC`
 - Capacity: two approved reviews at the minimum payout
-- Publication state: not started; stage wallet access works, but quoting requires an initialized USDC token account (HTTP 400)
+- Publication state: **confirmed**; one stage bounty was published for exactly `2.00 USDC`.
+- Gibwork task ID: `76bc62aa-5dca-4758-9f10-f77205cd0d01`
+- Payment transaction: `3w4B2qPPbFxfa2hUxHcY3xHydeWyAFKjA9LUjFLAj2fiyCfbHaGPcEyL2Lm3kcySWGSYHf8mCcEvtNTNG2BcNohG` (Solana finalized, no error)
 - Network: Gibwork stage, using real Solana-mainnet USDC
 
-The exported key passes the offline public-address check and the Gibwork team migrated the
-wallet for stage use. The API no longer returns the former wallet-authorization error. Its
-current response is: “The funding wallet does not have an initialized USDC token account.
-Deposit USDC and try again.” An initial, small **real Solana-mainnet USDC** deposit is needed
-to initialize that token account before a live quote can be obtained. Do not fund the entire
-bounty or publish until the exact quote has been reviewed and approved.
+The exported key passed the offline public-address check, the Gibwork team migrated the
+wallet for stage use, and the live SDK quote matched the expected USDC mint, funding amount,
+and total debit before signing. **Do not run the publication step again for this battle.**
+The rest of this document records the procedure used and the remaining review/evidence steps.
 
 ## 1. Choose and verify the signing wallet
 

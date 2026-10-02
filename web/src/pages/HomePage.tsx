@@ -76,9 +76,9 @@ export function HomePage({ onCreate, hostedReadOnly = false }: HomePageProps) {
 
       <div className="hero-copy">
         <div className="hero-system-line"><span>BOUT://NEW_REVIEW</span><i />LOCAL WORKSPACE</div>
-        <span className="eyebrow">Paid blind code review</span>
-        <h1>Two patches enter.<br /><em>Evidence decides.</em></h1>
-        <p>Package two real changes against one task, hide their authors, and prepare a paid review without moving funds.</p>
+        <span className="eyebrow">Paid review for code changes</span>
+        <h1>Two code changes.<br /><em>One fair review.</em></h1>
+        <p>Upload two patch files for the same task. Bout labels them A and B, then prepares a paid review on Gibwork. This step does not publish the bounty or move funds.</p>
       </div>
 
       <form className="composer-card" onSubmit={(event) => void submit(event)}>

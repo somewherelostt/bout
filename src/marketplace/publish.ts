@@ -78,6 +78,7 @@ export async function quoteBounty(input: {
     bountyDraftSchema,
   );
   const prepared = await input.quoter.prepare(toCreateTaskInput(draft));
+  assertPreparedQuoteMatchesTask(prepared.paymentQuote, toCreateTaskInput(draft));
 
   return {
     fundingAmount: prepared.paymentQuote.fundingAmount,
@@ -222,6 +223,7 @@ export function createStageTaskCreatorWithSigner(
   return {
     create: async (input, callbacks) => {
       const prepared = await client.tasks.prepareCreate(input);
+      assertPreparedQuoteMatchesTask(prepared.paymentQuote, input);
       assertAuthorizedTotal(
         prepared.paymentQuote.totalDebit,
         maximum,
@@ -315,6 +317,26 @@ export function assertAuthorizedTotal(
     throw new Error(
       `Gibwork quoted ${quoted} ${symbol}, which exceeds the authorized maximum of ${maximum}. Nothing was signed.`,
     );
+  }
+}
+
+export function assertPreparedQuoteMatchesTask(
+  quote: CreateTaskResult["paymentQuote"],
+  task: CreateTaskInput,
+): void {
+  if (
+    quote.token.mintAddress !== task.payment.mintAddress ||
+    quote.token.symbol !== "USDC" ||
+    quote.token.decimals !== 6
+  ) {
+    throw new Error("Gibwork quoted an unexpected payment token. Nothing was signed.");
+  }
+  const funding = decimalToMicros(quote.fundingAmount);
+  const expectedFunding = decimalToMicros(task.payment.amount);
+  const fee = decimalToMicros(quote.platformFee.amount);
+  const total = decimalToMicros(quote.totalDebit);
+  if (funding !== expectedFunding || total !== funding + fee) {
+    throw new Error("Gibwork quoted an unexpected funding amount or total. Nothing was signed.");
   }
 }
 

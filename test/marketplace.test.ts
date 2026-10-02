@@ -1,12 +1,14 @@
 import { access, mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import type { CreateTaskResult } from "@gibwork/sdk";
+import type { CreateTaskInput, CreateTaskResult } from "@gibwork/sdk";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createBattle } from "../src/core/battle.js";
 import { prepareBountyDraft } from "../src/marketplace/draft.js";
+import { USDC_MINT_ADDRESS } from "../src/marketplace/schemas.js";
 import {
   assertAuthorizedTotal,
+  assertPreparedQuoteMatchesTask,
   inspectPublicationState,
   publishBounty,
   quoteBounty,
@@ -102,6 +104,25 @@ describe("marketplace workflow", () => {
       "exceeds the authorized maximum of 1.00. Nothing was signed",
     );
     expect(() => assertAuthorizedTotal("1.00", "1.00")).not.toThrow();
+  });
+
+  it("rejects a changed token, funding amount, or inconsistent total before signing", () => {
+    const quote = createResult().paymentQuote;
+    const task = {
+      title: "Review two patches",
+      content: "<p>Review both candidates.</p>",
+      tags: ["Development"],
+      payment: { mintAddress: USDC_MINT_ADDRESS, amount: "1.00" },
+      minSubmissionAmount: "1.00",
+    } as CreateTaskInput;
+
+    expect(() => assertPreparedQuoteMatchesTask(quote, task)).not.toThrow();
+    expect(() => assertPreparedQuoteMatchesTask({ ...quote, token: { ...quote.token, mintAddress: "different" } }, task))
+      .toThrow("unexpected payment token");
+    expect(() => assertPreparedQuoteMatchesTask({ ...quote, fundingAmount: "0.50" }, task))
+      .toThrow("unexpected funding amount or total");
+    expect(() => assertPreparedQuoteMatchesTask({ ...quote, totalDebit: "1.01" }, task))
+      .toThrow("unexpected funding amount or total");
   });
 
   it("returns a live quote without writing publication state", async () => {
@@ -223,7 +244,7 @@ function createResult(): CreateTaskResult {
     txHash: "example-transaction-hash",
     lastValidBlockHeight: 42,
     paymentQuote: {
-      token: { mintAddress: "mint", symbol: "USDC", decimals: 6 },
+      token: { mintAddress: USDC_MINT_ADDRESS, symbol: "USDC", decimals: 6 },
       fundingAmount: "1.00",
       platformFee: { percent: 0, amount: "0.00" },
       totalDebit: "1.00",

@@ -112,11 +112,12 @@ The README documents the guarded stage publishing, synchronization, and reportin
 
 ## Final evidence gate
 
-Do not submit until each item is true:
+Required checks before submitting:
 
 - [x] A real Gibwork stage task URL or ID is present.
-- [ ] Optional live consensus extension: synchronize at least two real structured reviewer submissions and add a redacted final report. This is **not** claimed in the current publication demo.
 - [x] The current screenshots contain no private path, wallet address, key material, or reviewer profile data.
 - [x] The demo video is shared as "Anyone with the link · Viewer" in Google Drive, its preview plays, and its direct download returns HTTP 200 as `video/mp4` without account cookies.
-- [ ] The project brief, repository, showcase, and every screenshot URL open in a signed-out browser.
+- [x] Unauthenticated requests return HTTP 200 for the project brief, repository, showcase, screenshot gallery, each proof image, and the Drive video download.
 - [x] User confirmed attendance at two hackathon Discord sessions; proof should remain available privately.
+
+Optional extension after submission: synchronize at least two independent real structured reviewer submissions and add a redacted final report. There are currently zero live reviews; the submission and demo explicitly say so.

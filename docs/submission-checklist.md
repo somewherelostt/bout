@@ -26,7 +26,7 @@
 - [ ] Add a live final-report screenshot only after real reviews arrive; do not substitute sample verdicts.
 - [x] Upload the captioned demo video to Google Drive and enable anyone-with-link viewing. Drive preview plays in the owner account.
 - [x] Verify the Drive video without account cookies: the public download endpoint returned HTTP 200, `video/mp4`, and the expected 1,098,673-byte file. Drive sharing is "Anyone with the link · Viewer."
-- [ ] Verify every final submission URL after pushing the evidence commit. The public repo, hosted showcase, and Notion brief currently return HTTP 200; the Solana explorer rate-limited an unauthenticated request.
+- [x] Verify final submission links after pushing the evidence commit. Unauthenticated requests returned HTTP 200 for the repository, showcase, project brief, screenshot gallery and each proof image, and the public Drive video download. The finalized Solana transaction was verified in the browser.
 - [x] Confirm the repository contains no wallet files, secrets, personal paths, or private battle state.
 
 ## Administrative

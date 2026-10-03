@@ -84,8 +84,15 @@ export function BattlePage({ battles, onSaved }: { battles: BoutRecord[]; onSave
       <button className="back-button" type="button" onClick={() => navigate(-1)}><ArrowLeft size={16} /> Back</button>
       <header className="battle-header">
         <div><span className="eyebrow">BOUT {battle.id.slice(0, 8)} · {battle.status.toUpperCase()}</span><h1>{battle.title}</h1><p>{battle.repo}</p></div>
-        <div className="battle-payout"><span>Prepared pool</span><strong>${formatAmount(battle.reward)}</strong><small>USDC · local draft</small></div>
+        <div className="battle-payout"><span>{battle.hasPublicationReceipt ? "Published pool" : "Prepared pool"}</span><strong>${formatAmount(battle.reward)}</strong><small>USDC · {battle.hasPublicationReceipt ? "stage task confirmed" : "local draft"}</small></div>
       </header>
+
+      {battle.hasPublicationReceipt && (
+        <div className="review-meta-strip">
+          <span><BadgeCheck size={16} /> Gibwork task {battle.publicationTaskId}</span>
+          <span><ListChecks size={16} /> {battle.submissionCount} synced submissions · {battle.validReviewCount} valid reviews</span>
+        </div>
+      )}
 
       <div className="review-meta-strip">
         <span><EyeOff size={16} /> Authors hidden</span>

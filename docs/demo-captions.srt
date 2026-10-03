@@ -1,0 +1,19 @@
+1
+00:00:00,000 --> 00:00:11,000
+Bout: paid blind review for two competing code patches.
+
+2
+00:00:11,000 --> 00:00:24,000
+One task and two real Git patches are saved as a local battle.
+
+3
+00:00:24,000 --> 00:00:36,000
+Published once through the Gibwork SDK. The confirmed task ID and 2 USDC pool are shown above.
+
+4
+00:00:36,000 --> 00:00:55,000
+Reviewers compare anonymous A/B diffs with recorded SHA-256 integrity evidence.
+
+5
+00:00:55,000 --> 00:01:12,000
+At recording: 0 live reviews. Synchronization and final consensus report remain pending.

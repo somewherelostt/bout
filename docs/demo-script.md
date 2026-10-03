@@ -8,7 +8,7 @@ This runbook keeps the final demonstration terminal-first and within five minute
 - Use the existing published battle `9dace82d-cf59-4842-8698-e80792cf7f0f` and task `76bc62aa-5dca-4758-9f10-f77205cd0d01`.
 - Close notifications and unrelated applications.
 - Use a clean workspace with no personal paths in the terminal prompt.
-- Confirm that the published bounty already has at least two real reviewer submissions.
+- Check the current reviewer count. If it is zero, say so explicitly and present the recording as a published-workflow demonstration, not a completed consensus run.
 - Never display a keypair file, private key, recovery phrase, or signer approval screen.
 
 ## Recording sequence
@@ -19,13 +19,11 @@ This runbook keeps the final demonstration terminal-first and within five minute
 4. Show the anonymous `candidate-a.patch`, `candidate-b.patch`, and manifest hashes for that same battle.
 5. Show its already prepared public bounty payload; do not call `prepare` or `publish` again.
 6. Show the existing Gibwork task ID and run `bout bounty publish-status 9dace82d-cf59-4842-8698-e80792cf7f0f` to display the confirmed receipt. The on-chain transaction is already finalized.
-7. Run `bout bounty sync` with either the creator keypair path or external signer module path
-   supplied through a shell variable; keep paths and wallet approvals outside the camera crop.
-8. Run `bout report generate`.
-9. Open `private/report.md` and point out the tally, evidence, consensus, and privately resolved source slot.
-10. Optionally show the local workbench for no more than 20 seconds to demonstrate that the same artifact-backed state is inspectable visually.
+7. Show the live synchronization result: **0 submissions, 0 valid reviews** as of the recording. Do not display the keypair command or path.
+8. Show the workbench evidence funnel: one published bounty, zero synchronized review sets, zero final reports.
+9. End with the pending state. The report command must only be demonstrated against real reviews once they exist.
 
-If the two real reviews have not arrived, stop after step 6. That is only a publication proof clip, **not** the final end-to-end submission video. Resume or re-record after genuine review synchronization and report generation succeed. Neither requires another funded bounty.
+This publication-focused recording is suitable as the hackathon prototype demo if it clearly distinguishes the implemented report workflow from the still-pending live reviewer outcome. It shows a successful real Gibwork publication without claiming a completed consensus. Genuine review synchronization and reporting can be added later without funding another bounty.
 
 ## Claims to make
 

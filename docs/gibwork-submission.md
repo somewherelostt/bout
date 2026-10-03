@@ -1,6 +1,6 @@
 # Gibwork submission package
 
-Use this document as the final assembly sheet for the bounty submission. Replace every `ADD BEFORE SUBMITTING` marker with real public evidence before pasting it into Gibwork.
+Use this document as the final assembly sheet for the bounty submission. The current demo proves a real Gibwork publication; live reviewer consensus remains explicitly pending.
 
 ![Bout cover](../web/public/bout-cover.png)
 
@@ -53,8 +53,10 @@ The integration is intentionally guarded. Draft generation is offline. Publishin
 - **Source:** https://github.com/somewherelostt/bout
 - **Read-only visual showcase:** https://bout-omega.vercel.app
 - **Project brief:** https://maaztwts.notion.site/Bout-Paid-Blind-Code-Review-3e732902e4a38129804adae0dbbb4820
-- **Demo video:** ADD BEFORE SUBMITTING — paste the public recording URL
+- **Demo video:** https://drive.google.com/file/d/1dRq8T6-v6-5_P7YPNd9MOo8MkGT-iQGp/view (72-second captioned screen recording)
 - **Published Gibwork stage task:** `76bc62aa-5dca-4758-9f10-f77205cd0d01` (SDK-verified; a public stage task URL has not yet been verified)
+- **Publication proof:** https://explorer.solana.com/tx/3w4B2qPPbFxfa2hUxHcY3xHydeWyAFKjA9LUjFLAj2fiyCfbHaGPcEyL2Lm3kcySWGSYHf8mCcEvtNTNG2BcNohG
+- **Screenshot gallery:** https://github.com/somewherelostt/bout/tree/main/docs/screenshots
 
 ### Setup
 
@@ -99,11 +101,11 @@ The README documents the guarded stage publishing, synchronization, and reportin
 1. Upload `web/public/bout-cover.png` as the first image.
 2. Paste the submission text above.
 3. Add `docs/screenshots/showcase-home.png` as the product overview image.
-4. Add four redacted proof screenshots in this order:
-   - battle creation and returned battle ID;
-   - anonymous A/B bundle plus manifest hashes;
-   - confirmed Gibwork publication receipt or task page;
-   - final report with tally, evidence, and resolved winner.
+4. Add the redacted proof screenshots in this order:
+   - `docs/screenshots/created-bout-history.png` — the real battle in local history;
+   - `docs/screenshots/anonymous-patches.png` — anonymous A/B patches and hash prefixes;
+   - `docs/screenshots/published-stage-task.png` — published status, task ID, and honest review count;
+   - `docs/screenshots/evidence-workflow.png` — publication completed, review sync and final report pending.
 5. Add the public demo video link.
 6. Add the public project brief link.
 7. Add the repository and hosted showcase links again at the end so they are visible without expanding the full text.
@@ -113,8 +115,8 @@ The README documents the guarded stage publishing, synchronization, and reportin
 Do not submit until each item is true:
 
 - [x] A real Gibwork stage task URL or ID is present.
-- [ ] At least two real structured reviewer submissions were synchronized.
-- [ ] The final report screenshot contains no private path, wallet address, key material, or reviewer profile data.
-- [ ] The demo video is public and opens in a signed-out browser.
+- [ ] Optional live consensus extension: synchronize at least two real structured reviewer submissions and add a redacted final report. This is **not** claimed in the current publication demo.
+- [x] The current screenshots contain no private path, wallet address, key material, or reviewer profile data.
+- [x] The demo video is shared as "Anyone with the link · Viewer" in Google Drive, its preview plays, and its direct download returns HTTP 200 as `video/mp4` without account cookies.
 - [ ] The project brief, repository, showcase, and every screenshot URL open in a signed-out browser.
-- [ ] Attendance for at least two hackathon Discord sessions is recorded.
+- [x] User confirmed attendance at two hackathon Discord sessions; proof should remain available privately.

@@ -32,6 +32,16 @@ That is what “blind review” means here: reviewers see **Patch A** and **Patc
 
 The main product runs from the **command line**. The local visual workbench is a companion for inspecting the same files and demonstrating the workflow. No browser is required for the core CLI workflow.
 
+### Where this could help open source
+
+Imagine an open-source project posts a bug bounty and receives two different fixes. The maintainer could use Bout to package both patches anonymously and fund a separate Gibwork review. Reviewers would compare the fixes against the same requirements and explain the trade-offs, giving the maintainer clearer evidence for the merge decision.
+
+This could make paid review useful alongside OSS bug bounties, community contributions, and competing human- or agent-written patches. Bout supports the comparison; the maintainer still decides what to merge and how the original bug bounty is awarded.
+
+### A live demo you can explore
+
+I also built a [live web app for demonstration](https://bout-omega.vercel.app/). The hosted version is a read-only visual showcase to help people understand Bout. The hackathon project itself is the terminal-first CLI and Gibwork SDK workflow; the website is its demonstration companion.
+
 ### What the real demo shows
 
 The example compares two fixes for a path-handling bug: the code should keep file access inside the intended workspace. Reviewers can inspect how each patch handles unsafe paths and explain which approach is stronger.

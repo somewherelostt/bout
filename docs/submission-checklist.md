@@ -38,3 +38,4 @@
 - [x] Confirm any strict requirements announced verbally during the first session. **No additional requirements were reported.**
 - [x] Make the GitHub repository public only after the final secret scan.
 - [ ] Submit the repository, video, screenshots, setup instructions, and exported deliverables before the bounty deadline.
+  - Oct 3: the illustrated, plain-language draft is populated in Gibwork, including OSS use cases and the demonstration-only web app. Submit Work opens a loading state and returns to the draft without confirmation, including after a page refresh. Submission is not yet verified; no additional payment was made.

@@ -24,8 +24,10 @@
 - [x] Add the real Gibwork stage task ID to the README demo section. A publicly accessible stage task URL has not been verified.
 - [x] Add redacted screenshots for the created battle, anonymous patches and hashes, confirmed publication, and the current evidence funnel.
 - [ ] Add a live final-report screenshot only after real reviews arrive; do not substitute sample verdicts.
-- [x] Upload the captioned demo video to Google Drive and enable anyone-with-link viewing. Drive preview plays in the owner account.
-- [x] Verify the Drive video without account cookies: the public download endpoint returned HTTP 200, `video/mp4`, and the expected 1,098,673-byte file. Drive sharing is "Anyone with the link · Viewer."
+- [x] Upload the original captioned walkthrough to Google Drive and enable anyone-with-link viewing. Its preview plays in the owner account.
+- [x] Produce a 48-second 1080p/60fps launch film with 32 seconds of real footage, original music, and soft typing/click sounds. Full decoding, scene inspection, audio levels, and stream timing passed; see `launch-video-notes.md`.
+- [x] Verify both Drive videos without account cookies. Public download endpoints returned HTTP 200 and `video/mp4`: 12,087,939 bytes for the launch film and 1,098,673 bytes for the original walkthrough. Both have "Anyone with the link · Viewer" access.
+- [x] Update the README, demo runbook, submission document, and saved Gibwork draft with the new launch-film link while retaining the longer walkthrough.
 - [x] Verify final submission links after pushing the evidence commit. Unauthenticated requests returned HTTP 200 for the repository, showcase, project brief, screenshot gallery and each proof image, and the public Drive video download. The finalized Solana transaction was verified in the browser.
 - [x] Confirm the repository contains no wallet files, secrets, personal paths, or private battle state.
 

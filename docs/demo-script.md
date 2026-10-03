@@ -2,6 +2,12 @@
 
 This runbook keeps the final demonstration terminal-first and within five minutes.
 
+## Finished video
+
+[Watch the 48-second launch film](https://drive.google.com/file/d/1CZz1mFeRgoaPFVXod2Sl9rXLHf3po-hK/view). It opens with real patch excerpts and a verified CLI help command, then includes 32 seconds of the actual local recording: task, anonymous comparison, hashes, confirmed publication, and current review status. The film has an original instrumental score, soft clicks and typing sounds, and readable on-screen explanations.
+
+The [original 72-second walkthrough](https://drive.google.com/file/d/1dRq8T6-v6-5_P7YPNd9MOo8MkGT-iQGp/view) remains available. [Video source and render instructions](../video/README.md) document the edit. Both versions state that live reviews and the final report are pending.
+
 ## Before recording
 
 - The single real-money publication in [`funded-stage-runbook.md`](funded-stage-runbook.md) is complete. Do **not** publish a second bounty for the recording.

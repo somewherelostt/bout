@@ -1,0 +1,19 @@
+{
+  "fps": 60,
+  "duration": 48,
+  "bpm": 120,
+  "scenes": [
+    {"id": "choice", "from": 0, "duration": 4},
+    {"id": "brand", "from": 4, "duration": 4},
+    {"id": "terminal", "from": 8, "duration": 4},
+    {"id": "task", "from": 12, "duration": 6},
+    {"id": "blind", "from": 18, "duration": 8},
+    {"id": "hash", "from": 26, "duration": 6},
+    {"id": "paid", "from": 32, "duration": 6},
+    {"id": "evidence", "from": 38, "duration": 6},
+    {"id": "end", "from": 44, "duration": 4}
+  ],
+  "clicks": [0.4, 1.05, 2.0, 3.0, 4.0, 6.0, 10.95, 12.0, 18.0, 26.0, 32.0, 38.0, 44.0, 46.0],
+  "swishes": [3.7, 7.7, 11.7, 17.7, 25.7, 31.7, 37.7, 43.7],
+  "typing": {"from": 8.65, "until": 10.8, "text": "bout battle create --help"}
+}

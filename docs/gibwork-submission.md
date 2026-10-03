@@ -53,7 +53,8 @@ The integration is intentionally guarded. Draft generation is offline. Publishin
 - **Source:** https://github.com/somewherelostt/bout
 - **Read-only visual showcase:** https://bout-omega.vercel.app
 - **Project brief:** https://maaztwts.notion.site/Bout-Paid-Blind-Code-Review-3e732902e4a38129804adae0dbbb4820
-- **Demo video:** https://drive.google.com/file/d/1dRq8T6-v6-5_P7YPNd9MOo8MkGT-iQGp/view (72-second captioned screen recording)
+- **Demo video:** https://drive.google.com/file/d/1CZz1mFeRgoaPFVXod2Sl9rXLHf3po-hK/view (48-second launch film; 1080p/60fps, original music, and 32 seconds of actual workflow recording)
+- **Extended walkthrough:** https://drive.google.com/file/d/1dRq8T6-v6-5_P7YPNd9MOo8MkGT-iQGp/view (original 72-second captioned recording)
 - **Published Gibwork stage task:** `76bc62aa-5dca-4758-9f10-f77205cd0d01` (SDK-verified; a public stage task URL has not yet been verified)
 - **Publication proof:** https://explorer.solana.com/tx/3w4B2qPPbFxfa2hUxHcY3xHydeWyAFKjA9LUjFLAj2fiyCfbHaGPcEyL2Lm3kcySWGSYHf8mCcEvtNTNG2BcNohG
 - **Screenshot gallery:** https://github.com/somewherelostt/bout/tree/main/docs/screenshots

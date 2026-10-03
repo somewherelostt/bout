@@ -13,7 +13,7 @@
 <p align="center">
   <a href="https://bout-omega.vercel.app"><strong>Open the showcase</strong></a>
   &nbsp;·&nbsp;
-  <a href="https://drive.google.com/file/d/1dRq8T6-v6-5_P7YPNd9MOo8MkGT-iQGp/view"><strong>Watch the demo</strong></a>
+  <a href="https://drive.google.com/file/d/1CZz1mFeRgoaPFVXod2Sl9rXLHf3po-hK/view"><strong>Watch the demo</strong></a>
   &nbsp;·&nbsp;
   <a href="https://maaztwts.notion.site/Bout-Paid-Blind-Code-Review-3e732902e4a38129804adae0dbbb4820"><strong>Read the project brief</strong></a>
   &nbsp;·&nbsp;
@@ -44,7 +44,11 @@ Hosted showcase: [bout-omega.vercel.app](https://bout-omega.vercel.app). The dep
 
 Live stage demonstration: battle `9dace82d-cf59-4842-8698-e80792cf7f0f` was published once as Gibwork task `76bc62aa-5dca-4758-9f10-f77205cd0d01`. The `2.00 USDC` payment [finalized on Solana](https://explorer.solana.com/tx/3w4B2qPPbFxfa2hUxHcY3xHydeWyAFKjA9LUjFLAj2fiyCfbHaGPcEyL2Lm3kcySWGSYHf8mCcEvtNTNG2BcNohG). Two independent reviews and the final report are still pending; no sample verdicts are presented as real results.
 
-[Watch the 72-second, captioned live-workflow demo](https://drive.google.com/file/d/1dRq8T6-v6-5_P7YPNd9MOo8MkGT-iQGp/view) or [download the MP4 from this repository](docs/bout-demo.mp4). It shows the existing published task, anonymous patch comparison, and the current zero-review state. It does not claim a live consensus result.
+[Watch the 48-second launch film](https://drive.google.com/file/d/1CZz1mFeRgoaPFVXod2Sl9rXLHf3po-hK/view) · [Download the 1080p MP4](docs/bout-launch.mp4) · [Original 72-second walkthrough](https://drive.google.com/file/d/1dRq8T6-v6-5_P7YPNd9MOo8MkGT-iQGp/view)
+
+The launch film combines animated titles, an original soundtrack, and 32 seconds of real workflow footage. It shows the existing published task, anonymous patches and hashes, and the current zero-review state. Live consensus and the final report remain pending. [Editable video source and render instructions](video/README.md).
+
+[![Watch the Bout launch film](docs/bout-launch-poster.jpg)](https://drive.google.com/file/d/1CZz1mFeRgoaPFVXod2Sl9rXLHf3po-hK/view)
 
 ![Bout local review workbench](docs/screenshots/showcase-home.png)
 

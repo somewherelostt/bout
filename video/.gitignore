@@ -1,0 +1,6 @@
+node_modules/
+out/
+.venv/
+public/recording.mp4
+public/recording-cfr.mp4
+public/audio/

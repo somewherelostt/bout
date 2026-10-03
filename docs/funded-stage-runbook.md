@@ -144,7 +144,13 @@ node dist/cli.js bounty publish-status $boutBattleId
 
 ## 6. Collect, synchronize, and report
 
-Give two reviewers the public Gibwork task and require the response contract embedded in the
+The creator wallet cannot submit to its own stage bounty: Gibwork returns
+`TASK_OWNER_CANNOT_SUBMIT` before any participation fee is charged. Do not create another
+account controlled by the creator to bypass this restriction. Ask two separate, eligible
+Gibwork users to review independently; each should check the live participation-fee quote
+before choosing to submit.
+
+Give two reviewers the Gibwork stage task ID and require the response contract embedded in the
 bounty. After two real submissions appear:
 
 ```powershell

@@ -6,47 +6,41 @@ Use this document as the final assembly sheet for the bounty submission. The cur
 
 ## Submission title
 
-**Bout — paid blind review for competing code patches**
+**Bout — two code changes, one fair review**
 
 ## Short description
 
-Bout is a terminal-first workflow that turns two competing Git patches into an anonymous, paid code-review bounty. It uses the Gibwork SDK as the review transport, validates structured human verdicts, resolves consensus, and exports creator-only Markdown and JSON reports with the winning source identity.
+Bout helps a developer compare two code changes fairly. It hides who wrote each change, publishes a paid review task through Gibwork, and brings the reviewers' reasons back into the developer's terminal.
 
 ## Paste-ready submission
 
-### What I built
+### Why I made Bout
 
-I built **Bout**, a terminal-first developer workflow for paid blind review of competing code patches.
+Choosing between two fixes can be harder than writing them. One change might be shorter; another might handle awkward edge cases better. Automated tests help, but they do not always tell you which approach will be safer or easier to maintain.
 
-Bout takes one task and two Git patches, assigns the candidates randomized A/B identities, records SHA-256 integrity evidence, and prepares a reviewer-safe bounty package. The creator can then publish the review through Gibwork, synchronize structured reviewer submissions, exclude malformed or rejected responses, calculate deterministic consensus, and export a private final report that maps the winning anonymous candidate back to its original source.
+I built **Bout** to make that decision easier to review. A developer gives it two proposed code changes for the same task. Bout hides who produced each one, then uses Gibwork to offer a paid review. The reviewer can focus on the code and explain their choice.
 
-### Why it is useful
+That is what “blind review” means here: reviewers see **Patch A** and **Patch B**, while the developer keeps the original identities privately.
 
-Automated tests can show that known expectations pass, but they often cannot decide which of two plausible implementations is safer, clearer, or easier to maintain. Ordinary review also exposes author identity and rarely provides a consistent evidence contract.
+### How it works
 
-Bout adds a paid human judgment layer while keeping the comparison fair:
+1. **Give both changes the same brief.** The developer supplies one task and two patch files, which contain the proposed code changes.
+2. **Prepare a fair comparison.** Bout labels the patches A and B and records a digital fingerprint for each file, so the exact code being reviewed can be checked later.
+3. **Publish the paid review.** The Gibwork SDK creates the bounty from the terminal. Preparing the files does not move money; publication is a separate, confirmed step.
+4. **Collect reasons, not just a vote.** Reviewers are asked to assess correctness, security, and maintainability and explain their choice with evidence from the code.
+5. **Bring the result back.** Bout downloads the submissions through the SDK, checks their format, and can generate a private report showing whether the reviewers agree. It does not force a winner when the votes are tied.
 
-- both candidates receive the same task, verification command, and rubric;
-- reviewers see neutral A/B labels rather than source identities;
-- every public artifact is hashed and inspectable;
-- verdicts require correctness, security, maintainability, evidence, rationale, and confidence;
-- creator-only files retain the private identity map and final source resolution.
+The main product runs from the **command line**. The local visual workbench is a companion for inspecting the same files and demonstrating the workflow. No browser is required for the core CLI workflow.
 
-### How Gibwork is core to the workflow
+### What the real demo shows
 
-Bout uses the **Gibwork SDK** to publish the anonymous review bounty and retrieve creator-visible submissions. Gibwork is not a decorative API call: it is the paid human-review transport between artifact preparation and consensus reporting.
+The example compares two fixes for a path-handling bug: the code should keep file access inside the intended workspace. Reviewers can inspect how each patch handles unsafe paths and explain which approach is stronger.
 
-The integration is intentionally guarded. Draft generation is offline. Publishing is a separate stage-only action with an exact confirmation phrase, a creator-defined maximum debit, and a private recovery record that blocks accidental duplicate funding when a network result is uncertain.
+I created the anonymous bundle and published one real Gibwork stage bounty with a **2 USDC pool**. The payment transaction is finalized. Its task ID is `76bc62aa-5dca-4758-9f10-f77205cd0d01`.
 
-### Core workflow
+The demo follows the workflow from the anonymous patch bundle through real, funded bounty publication. The review-validation and reporting paths are also implemented and covered by automated tests.
 
-1. Run `bout doctor` to verify Node.js, Git, SQLite, and workspace readiness.
-2. Create a battle from one task and two real Git patch files.
-3. Inspect the anonymous reviewer bundle and SHA-256 manifest.
-4. Prepare the Gibwork bounty payload locally without moving funds.
-5. Publish to stage with an explicit real-funds confirmation and debit ceiling.
-6. Synchronize real reviewer submissions from Gibwork.
-7. Generate the private Markdown and JSON consensus report.
+The 48-second film includes actual workflow footage. The longer walkthrough and screenshots below let reviewers inspect the details. The project passed 34 automated tests and its build checks. I have also attended both required Discord hackathon sessions.
 
 ### Links
 
